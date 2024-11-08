@@ -5,13 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hex Tile Map</title>
     <style>
+        /* body를 flexbox로 설정하여 중앙 정렬 */
+        body {
+            display: flex;
+            flex-direction: column; /* 세로 방향으로 배치 */
+            justify-content: center; /* 가로로 중앙 정렬 */
+            align-items: center;     /* 세로로 중앙 정렬 */
+            height: 100vh;           /* 화면 전체 높이 사용 */
+            margin: 0;               /* 기본 margin 제거 */
+            background-color: #f0f0f0; /* 배경색 설정 */
+        }
+
         canvas {
             border: 1px solid black;
+        }
+
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+
+            font-family: 'Arial', sans-serif; /* 폰트 패밀리 설정 */
+            font-size: 30px; /* 폰트 크기 설정 */
+            font-weight: bold; /* 폰트 두께 설정 */
+        }
+
+        .controls label {
+            margin: 5px;
+        }
+
+        .controls input {
+            margin: 10px;
         }
     </style>
 </head>
 <body>
-    <canvas id="hexMap" width="900" height="900"></canvas>
+    <div class="controls">
+        <label for="tileSizeSlider">타일 크기: <span id="tileSizeValue">30</span></label>
+        <input type="range" id="tileSizeSlider" min="10" max="100" value="30">
+        
+        <label for="moveSpeedSlider">맵 이동 속도: <span id="moveSpeedValue">10</span></label>
+        <input type="range" id="moveSpeedSlider" min="1" max="100" value="10">
+    </div>
+
+    <canvas id="hexMap" width="2000" height="1000"></canvas>
     <script src="map.js"></script>
 </body>
 </html>
