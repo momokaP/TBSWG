@@ -7,16 +7,18 @@ const tileSizeValue = document.getElementById("tileSizeValue");
 const moveSpeedValue = document.getElementById("moveSpeedValue");
 
 // 육각형 타일의 반지름
-let hexRadius = 10; // 육각형 반지름
+let hexRadius = 100; // 육각형 반지름
 const rows = 45; // 행 수
 const cols = 45; // 열 수
 const hexMap = []; // 육각형 타일 정보를 저장할 배열
 const unitMap = []; // 유닛 정보를 저장할 배열
+const buildingMap = []; // 건물 정보를 저장할 배열
 let scaleChange = 1;
 
 for (let row = 0; row < rows; row++) {
     hexMap[row] = []; // 각 행을 초기화
     unitMap[row] = []; // 각 행을 초기화
+    buildingMap[row] = []; // 각 행을 초기화
 }
 
 // 맵의 이동을 위한 변수
@@ -40,6 +42,7 @@ class HexTile {
         this.isClicked = false;  // 클릭 상태 저장
         this.dirty = true;  // 타일의 상태가 변경되었을 때만 true로 설정
         this.unit = null; // 유닛 객체
+        this.Building = null; //건물 객체
         this.row = null;
         this.col = null;
     }
@@ -55,6 +58,17 @@ class HexTile {
         this.dirty = true; // 유닛이 타일에 배치되었으므로 해당 타일을 다시 그려야 함
         this.unit.setRowCol(this.row, this.col);
         this.unit.setXY(this.x, this.y);
+    }
+    
+    deleteUnit(){
+        this.unit = null;
+    }
+
+    placeBuilding(Building) {
+        this.Building = Building; // 건물 객체 저장
+        this.dirty = true; // 건물이 타일에 배치되었으므로 해당 타일을 다시 그려야 함
+        this.Building.setRowCol(this.row, this.col);
+        this.Building.setXY(this.x, this.y);
     }
 
     // 육각형 그리기
@@ -80,6 +94,11 @@ class HexTile {
 
         // 타일을 그린 후 dirty 상태를 false로 리셋
         this.dirty = false;
+
+        // 건물 그리기 (타일 위에 건물이 있을 경우)
+        if (this.Building) {
+            this.Building.draw(ctx, offsetX, offsetY);
+        }
 
         // 유닛 그리기 (타일 위에 유닛이 있을 경우)
         if (this.unit) {
@@ -149,7 +168,7 @@ class HexTile {
 }
 
 class Unit {
-    constructor(size = 20, color = 'green') {
+    constructor(size = 20, color = 'green', name = "유닛1", health = 101) {
         this.x = null;
         this.y = null;
         this.size = size;
@@ -157,6 +176,8 @@ class Unit {
         this.isSelected = false; // 유닛 선택 상태
         this.row = null;
         this.col = null;
+        this.name = name; // 유닛 이름
+        this.health = health; // 유닛 체력
     }
 
     draw(ctx, offsetX = 0, offsetY = 0) {
@@ -185,6 +206,50 @@ class Unit {
     }
 }
 
+class Building {
+    constructor(size, color = 'gray', name = "건물1", health = 501) {
+        this.name = name;  // 건물 이름
+        this.health = health; // 건물 체력
+        this.size = size;    // 건물의 크기
+        this.color = color;
+        this.isSelected = false; // 건물 선택 상태
+        this.x = null;        // 건물의 x 위치
+        this.y = null;        // 건물의 y 위치
+        this.row = null;
+        this.col = null; 
+    }
+
+    // 건물 그리기
+    draw(ctx, offsetX = 0, offsetY = 0) {
+        const buildingSize = this.size*1.23;
+        ctx.fillStyle = this.color;
+        ctx.fillRect(this.x + offsetX - buildingSize/2, this.y + offsetY - buildingSize/2, buildingSize, buildingSize);  // 건물 그리기
+        ctx.strokeStyle = 'black';
+        ctx.strokeRect(this.x + offsetX - buildingSize/2, this.y + offsetY - buildingSize/2, buildingSize, buildingSize);
+    }
+
+    // 건물 클릭 체크
+    isBuildingClicked(mouseX, mouseY, offsetX = 0, offsetY = 0) {
+        const buildingSize = this.size*1.23;
+        // 건물의 좌측 상단 (x, y) 좌표와 우측 하단 (x + width, y + height) 좌표를 계산
+        const withinX = mouseX >= (this.x + offsetX - buildingSize/2) && mouseX <= (this.x + offsetX - buildingSize/2 + buildingSize);
+        const withinY = mouseY >= (this.y + offsetY - buildingSize/2) && mouseY <= (this.y + offsetY - buildingSize/2 + buildingSize);
+
+        // 마우스 좌표가 건물의 영역 내에 있으면 클릭한 것으로 처리
+        return withinX && withinY;
+    }
+
+    setRowCol(row, col){
+        this.row = row;
+        this.col = col;
+    }
+
+    setXY(x,y){
+        this.x=x;
+        this.y=y;
+    }
+}
+
 // 유닛 클릭 시 근처 타일 색상 변경
 function highlightNearbyTiles(unit, rows, cols) {
     const horizontalSpacing = Math.sqrt(3) * hexRadius;
@@ -193,7 +258,7 @@ function highlightNearbyTiles(unit, rows, cols) {
     const unitRow = unit.row;//= Math.floor(unit.y / verticalSpacing); // 유닛의 행
     const unitCol = unit.col;//= Math.floor(unit.x / horizontalSpacing); // 유닛의 열
 
-    console.log(`ur:${unitRow}, uc:${unitCol}`);
+    //console.log(`ur:${unitRow}, uc:${unitCol}`);
 
     for (let row = Math.max(0, unitRow - 1); row <= Math.min(rows - 1, unitRow + 1); row++) {
         for (let col = Math.max(0, unitCol - 1); col <= Math.min(cols - 1, unitCol + 1); col++) {
@@ -207,7 +272,7 @@ function highlightNearbyTiles(unit, rows, cols) {
                     if (hexMap[row] && hexMap[row][col]) {
                         hexMap[row][col].dirty=true;
                         hexMap[row][col].setColor("yellow"); // 근처 타일을 노란색으로 변경
-                        console.log(`${row}, ${col}`);
+                        //console.log(`${row}, ${col}`);
                     }
                 }
             }
@@ -218,7 +283,7 @@ function highlightNearbyTiles(unit, rows, cols) {
                     if (hexMap[row] && hexMap[row][col]) {
                         hexMap[row][col].dirty=true;
                         hexMap[row][col].setColor("yellow"); // 근처 타일을 노란색으로 변경
-                        console.log(`${row}, ${col}`);
+                        //console.log(`${row}, ${col}`);
                     }
                 }
             }
@@ -250,7 +315,7 @@ function createHexMap(rows, cols) {
             tile.col = col;
 
             // 특정 타일에 유닛 배치 (예: (2,2) 위치에 유닛)
-            if (initial === true && row === 4 && col === 4) {
+            if (initial === true && row === 20 && col === 20) {
                 initial = false
                 const unit = new Unit(hexRadius/2, 'blue'); // 유닛 크기와 색상 설정
                 unitMap[row][col] = unit;
@@ -258,17 +323,33 @@ function createHexMap(rows, cols) {
                 tile.placeUnit(unit); // 타일에 유닛 배치
             }
 
+            if (buildingMap[row] && buildingMap[row][col]){
+                tile.placeBuilding(buildingMap[row][col]); // 타일에 건물 배치
+                buildingMap[row][col].size = hexRadius;
+            }
+
             if (unitMap[row] && unitMap[row][col]){
                 tile.placeUnit(unitMap[row][col]); // 타일에 유닛 배치
                 unitMap[row][col].size = hexRadius/2;
-                console.log(`i'm createHexMap, ${unitMap[row][col].row}, ${unitMap[row][col].col}, ${unitMap[row][col].size}`)
+                //console.log(`i'm createHexMap, ${unitMap[row][col].row}, ${unitMap[row][col].col}, ${unitMap[row][col].size}`)
             }
             
             tile.draw(ctx, mapOffsetX, mapOffsetY); // 타일 그리기
         }
     }
+
+    hexMap.forEach(row => {
+        row.forEach(tile => {
+            if(tile.unit){
+                //console.log(`tile 0, x:${tile.unit.row}, y:${tile.unit.col}`);
+            }
+        });
+    });
+
     markRedTiles();
     drawChangedTiles();
+
+    //console.log(`ofx:${mapOffsetX}, ofy:${mapOffsetY}`)
 }
 
 // 특정 좌표에 있는 타일들을 빨간색으로 설정
@@ -288,6 +369,16 @@ function markRedTiles() {
     });
 }
 
+let isDragging = false;
+let startX, startY;
+
+canvas.addEventListener('mousedown', (event) => {
+    // 마우스 클릭 시 드래그 시작
+    isDragging = true;
+    startX = event.clientX;
+    startY = event.clientY;
+});
+
 // 마우스 이동 이벤트 리스너
 let needsRedraw = false;
 canvas.addEventListener("mousemove", (event) => {
@@ -301,11 +392,37 @@ canvas.addEventListener("mousemove", (event) => {
         });
     });
     requestAnimationFrame(() => drawChangedTiles()); // 변경된 타일만 다시 그리기
+
+    if (isDragging) {
+        // 드래그 중일 때 마우스 이동 거리를 계산하여 mapOffsetX, mapOffsetY 변경
+        const dx = event.clientX - startX;
+        const dy = event.clientY - startY;
+
+        mapOffsetX += dx;
+        mapOffsetY += dy;
+
+        // 현재 위치를 시작 위치로 업데이트
+        startX = event.clientX;
+        startY = event.clientY;
+
+        // 화면을 다시 그리기
+        requestAnimationFrame(drawMap);
+    }
+});
+
+canvas.addEventListener('mouseup', () => {
+    // 마우스 버튼을 떼면 드래그 종료
+    isDragging = false;
+});
+
+canvas.addEventListener('mouseleave', () => {
+    // 캔버스 밖으로 나가면 드래그 종료
+    isDragging = false;
 });
 
 
 
-let moveSpeed = 10; // 한 번에 이동할 거리 (픽셀 단위
+let moveSpeed = 100; // 한 번에 이동할 거리 (픽셀 단위
 canvas.tabIndex = 1000;  // tabIndex를 설정하여 캔버스가 포커스를 받을 수 있게 합니다.
 
 // 캔버스 클릭 시 포커스 주기
@@ -314,6 +431,7 @@ canvas.tabIndex = 1000;  // tabIndex를 설정하여 캔버스가 포커스를 �
 //});
 
 let selectedUnit = null; // 현재 선택된 유닛
+let selectedBuilding = null; //현재 선택된 건물
 
 canvas.addEventListener("click", (event) => {
     canvas.focus();  // 캔버스를 클릭하면 포커스를 줍니다.
@@ -324,41 +442,123 @@ canvas.addEventListener("click", (event) => {
 
     // 유닛 클릭 확인
     let unitClicked = false;
+    let BuildingClicked = false;
+    let unitMoved = false;
+
     hexMap.forEach(row => {
         row.forEach(tile => {
             tile.updateClick(mouseX, mouseY, mapOffsetX, mapOffsetY);
-            if (tile.unit && tile.unit.isClicked(mouseX, mouseY, mapOffsetX, mapOffsetY)) {
-                // 유닛을 클릭했을 때
-                selectedUnit = tile.unit;
-                unitClicked = true;
-                highlightNearbyTiles(selectedUnit, rows, cols); // 근처 타일 색상 변경
+            try{
+                if (tile.unit && tile.unit.isClicked(mouseX, mouseY, mapOffsetX, mapOffsetY)) {
+                    // 유닛을 클릭했을 때
+                    selectedUnit = tile.unit;
+                    unitClicked = true;
+
+                    // 유닛의 정보를 <div class="status">에 표시
+                    document.getElementById("name-value").textContent = selectedUnit.name || "유닛 이름";
+                    document.getElementById("health-value").textContent = `체력: ${selectedUnit.health || 100}`;
+                    document.getElementById("function-value").textContent = "기능: 이동";
+
+                    if (!document.getElementById("build-button")) {
+                        const functionValue = document.getElementById("function-value");
+                        const buildButton = document.createElement('button');
+                        buildButton.id = "build-button";
+                        buildButton.textContent = "건설하기";
+                        buildButton.onclick = () => {
+                            if(!tile.Building){
+                                const building = new Building(hexRadius)
+                                tile.placeBuilding(building);
+                                buildingMap[tile.row][tile.col]=tile.Building;
+                                createHexMap(rows, cols);
+                                console.log(`x:${tile.row} y:${tile.col}`)
+                            }
+                            
+                        };  
+                        functionValue.appendChild(buildButton);
+                    }
+
+                    highlightNearbyTiles(selectedUnit, rows, cols); // 근처 타일 색상 변경
+                }
+            }
+            catch (err){
+                console.error(err);
+                console.log(`is:${tile.unit}, x:${tile.unit.row}, y:${tile.unit.col}`);
+                unitMap.forEach(row => {
+                    row.forEach(unit => {
+                        if(unit){
+                            console.log(`unit O, x:${unit.row}, y:${unit.col}`);
+                        }
+                    });
+                });
+                hexMap.forEach(row => {
+                    row.forEach(tile => {
+                        if(tile.unit){
+                            console.log(`tile 0, x:${tile.unit.row}, y:${tile.unit.col}`);
+                        }
+                    });
+                });
             }
         });
     });
 
-    console.log(`${mouseX}, ${mouseY}, ${unitClicked}`);
+    //console.log(`${mouseX}, ${mouseY}, ${unitClicked}`);
 
     if (!unitClicked) {
         hexMap.forEach(row => {
             row.forEach(tile => {
                 if (tile.isClicked===true){
                     if(tile.color === "yellow" && tile.unit === null) {
-                        console.log(`Yo color:${tile.color}`);
+                        // console.log(`Yo color:${tile.color}`);
 
-                        console.log(`selectedUnit: ${selectedUnit.row}, ${selectedUnit.col}`);
+                        //console.log(`selectedUnit: ${selectedUnit.row}, ${selectedUnit.col}`);
                         unitMap[selectedUnit.row][selectedUnit.col] = null;
+                        //console.log(`is:${hexMap[selectedUnit.row][selectedUnit.col].unit}, x:${hexMap[selectedUnit.row][selectedUnit.col].unit.row}, y:${hexMap[selectedUnit.row][selectedUnit.col].unit.col}`);
+                        hexMap[selectedUnit.row][selectedUnit.col].deleteUnit();
+                        //console.log(`is:${hexMap[selectedUnit.row][selectedUnit.col].unit}`);
                         
                         // 노란색으로 하이라이트 된 타일을 클릭하면 유닛을 해당 타일로 이동
                         tile.placeUnit(selectedUnit);
-                        console.log(`i'm click, ${tile.unit.row}, ${tile.unit.col}`);
+                        //console.log(`i'm click, ${tile.unit.row}, ${tile.unit.col}`);
                         unitMap[tile.unit.row][tile.unit.col] = tile.unit;
+                        unitMoved=true;
+                        
+                        const buildButton = document.getElementById("build-button");
+                        if (buildButton) {
+                            buildButton.onclick = () => {
+                                if(!tile.Building){
+                                    const building = new Building(hexRadius)
+                                    tile.placeBuilding(building);
+                                    buildingMap[tile.row][tile.col]=tile.Building;
+                                    createHexMap(rows, cols);
+                                    console.log(`x:${tile.row} y:${tile.col}`)
+                                }
+                                
+                            };  
+                        }
                         
                         selectedUnit = null; // 유닛을 이동시킨 후 선택 해제
                         createHexMap(rows, cols);
                     }
                     else{
-                        createHexMap(rows, cols);
+                        if(!BuildingClicked){
+                            document.getElementById("name-value").textContent = " ";
+                            document.getElementById("health-value").textContent = " ";
+                            document.getElementById("function-value").textContent = " ";
+                            const buildButton = document.getElementById("build-button");
+                            if (buildButton) {buildButton.remove();}
+                            createHexMap(rows, cols);
+                        }
                     }
+                }
+                if (tile.Building && !unitMoved && tile.Building.isBuildingClicked(mouseX, mouseY, mapOffsetX, mapOffsetY)){
+                    selectedBuilding = tile.Building;
+                    BuildingClicked=true;
+                    // 건물의 정보를 <div class="status">에 표시
+                    document.getElementById("name-value").textContent = selectedBuilding.name || "유닛 이름";
+                    document.getElementById("health-value").textContent = `체력: ${selectedBuilding.health || 100}`;
+                    document.getElementById("function-value").textContent = "기능: 건물이다";
+               
+                    createHexMap(rows, cols);
                 }
             });
         });
