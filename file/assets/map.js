@@ -7,7 +7,7 @@ const tileSizeValue = document.getElementById("tileSizeValue");
 const moveSpeedValue = document.getElementById("moveSpeedValue");
 
 // 육각형 타일의 반지름
-let hexRadius = 100; // 육각형 반지름
+let hexRadius = 50; // 육각형 반지름
 const rows = 45; // 행 수
 const cols = 45; // 열 수
 const hexMap = []; // 육각형 타일 정보를 저장할 배열

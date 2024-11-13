@@ -21,13 +21,13 @@
         }
 
         .controls {
-            margin-bottom: 20px;
+            margin-bottom: 5px;
             display: flex;
             flex-direction: row;
             align-items: center;
 
             font-family: 'Arial', sans-serif; /* 폰트 패밀리 설정 */
-            font-size: 30px; /* 폰트 크기 설정 */
+            font-size: 15px; /* 폰트 크기 설정 */
             font-weight: bold; /* 폰트 두께 설정 */
         }
 
@@ -36,21 +36,21 @@
         }
 
         .controls input {
-            margin: 10px;
+            margin: 5px;
         }
 
         .status {
             position: relative;  /* 절대 위치에서 상대 위치로 변경 */
-            width: 2000px;
-            margin-top: 20px;     /* canvas와 status 사이에 여백을 추가 */
-            top: 10px;
-            left: 10px;
-            padding: 10px;
+            width: 1000px;
+            margin-top: 5x;     /* canvas와 status 사이에 여백을 추가 */
+            top: 5px;
+            left: 5px;
+            padding: 5px;
             background-color: #f0f0f0;
-            border-radius: 10px;
+            border-radius: 5px;
             border: 2px solid #ccc;
             font-family: Arial, sans-serif;
-            font-size: 30px; /* 폰트 크기 설정 */
+            font-size: 15px; /* 폰트 크기 설정 */
             font-weight: bold; /* 폰트 두께 설정 */
             text-align: center;
         }
@@ -70,7 +70,7 @@
             text-align: center;
             border: 1px solid #ccc; /* 테두리 추가 */
             border-radius: 5px;
-            min-height: 75px; /* 각 열의 최소 높이를 지정 */
+            min-height: 30px; /* 각 열의 최소 높이를 지정 */
         }
 
         /* 각 열의 가중치를 다르게 설정 */
@@ -87,13 +87,13 @@
         }
 
         #build-button {
-            margin-left: 10px;  /* "기능"과 버튼 사이 간격 */
+            margin-left: 5px;  /* "기능"과 버튼 사이 간격 */
             font-family: 'Arial', sans-serif;
-            font-size: 30px;
+            font-size: 15px;
             font-weight: bold;
             color: #fff;
             background-color: #4CAF50;
-            padding: 10px 20px;
+            padding: 5px 5px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -108,14 +108,14 @@
 </head>
 <body>
     <div class="controls">
-        <label for="tileSizeSlider">타일 크기: <span id="tileSizeValue">100</span></label>
-        <input type="range" id="tileSizeSlider" min="10" max="100" value="100">
+        <label for="tileSizeSlider">타일 크기: <span id="tileSizeValue">50</span></label>
+        <input type="range" id="tileSizeSlider" min="10" max="100" value="50">
         
         <label for="moveSpeedSlider">맵 이동 속도 (키보드): <span id="moveSpeedValue">100</span></label>
         <input type="range" id="moveSpeedSlider" min="1" max="100" value="100">
     </div>
 
-    <canvas id="hexMap" width="2000" height="1000"></canvas>
+    <canvas id="hexMap" width="1000" height="450"></canvas>
 
     <div class="status">
         <div class="row">
