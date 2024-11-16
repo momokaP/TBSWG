@@ -214,6 +214,30 @@ class Unit {
     }
 }
 
+class buildUnit extends Unit{
+    constructor(size, color = 'blue', name = "건설 유닛", health = 50) {
+        super(size, color, name, health);   
+    }
+}
+
+class meleeUnit extends Unit{
+    constructor(size, color = 'slateblue', name = "근접 유닛", health = 150) {
+        super(size, color, name, health);   
+    }
+}
+
+class rangedUnit extends Unit{
+    constructor(size, color = 'steelblue', name = "원거리 유닛", health = 100) {
+        super(size, color, name, health);   
+    }
+}
+
+class eliteUnit extends Unit{
+    constructor(size, color = 'royalblue', name = "엘리트 유닛", health = 200) {
+        super(size, color, name, health);   
+    }
+}
+
 class Building {
     constructor(size, color = 'gray', name = "건물1", health = 501) {
         this.name = name;  // 건물 이름
@@ -255,6 +279,46 @@ class Building {
     setXY(x,y){
         this.x=x;
         this.y=y;
+    }
+}
+
+class mainBuilding extends Building{
+    constructor(size, color = 'pink', name = "메인 건물", health = 500) {
+        // 부모 클래스인 Building의 constructor를 호출합니다.
+        super(size, color, name, health); 
+        this.description = "메인 건물이다";
+    }
+}
+
+class developmentBuilding extends Building{
+    constructor(size, color = 'purple', name = "발전 건물", health = 500) {
+        // 부모 클래스인 Building의 constructor를 호출합니다.
+        super(size, color, name, health); 
+        this.description = "발전 건물이다";
+    }
+}
+
+class meleeUnitBuilding extends Building{
+    constructor(size, color = 'lime', name = "근거리 유닛 생산 건물", health = 500) {
+        // 부모 클래스인 Building의 constructor를 호출합니다.
+        super(size, color, name, health); 
+        this.description = "근거리 유닛 생산 건물이다";
+    }
+}
+
+class rangedUnitBuilding extends Building{
+    constructor(size, color = 'peru', name = "원거리 유닛 생산 건물", health = 500) {
+        // 부모 클래스인 Building의 constructor를 호출합니다.
+        super(size, color, name, health); 
+        this.description = "원거리 유닛 생산 건물이다";
+    }
+}
+
+class eliteUnitBuilding extends Building{
+    constructor(size, color = 'olive', name = "엘리트 유닛 생산 건물", health = 500) {
+        // 부모 클래스인 Building의 constructor를 호출합니다.
+        super(size, color, name, health); 
+        this.description = "엘리트 유닛 생산 건물이다";
     }
 }
 
@@ -318,7 +382,7 @@ function createHexMap(rows, cols) {
             if (initial === true && 
                 row === initial_unit_row && col === initial_unit_col) {
                 initial = false
-                const unit = new Unit(hexRadius/2, 'blue'); // 유닛 크기와 색상 설정
+                const unit = new buildUnit(hexRadius/2); // 유닛 크기와 색상 설정
                 unitMap[row][col] = unit;
                 console.log("initial");
                 tile.placeUnit(unit); // 타일에 유닛 배치
@@ -431,25 +495,15 @@ canvas.addEventListener("click", (event) => {
                     // 유닛의 정보를 <div class="status">에 표시
                     document.getElementById("name-value").textContent = selectedUnit.name || "유닛 이름";
                     document.getElementById("health-value").textContent = `체력: ${selectedUnit.health || 100}`;
-                    document.getElementById("function-value").textContent = "기능: 이동";
+                    document.getElementById("function-value").textContent = "기능: 이동, 건설하기";
                     
                     // 기능에 유닛의 건설하기 버튼 추가
-                    if (!document.getElementById("build-button")) {
-                        const functionValue = document.getElementById("function-value");
-                        const buildButton = document.createElement('button');
-                        buildButton.id = "build-button";
-                        buildButton.textContent = "건설하기";
-                        buildButton.onclick = () => {
-                            if(!tile.Building){
-                                const building = new Building(hexRadius)
-                                tile.placeBuilding(building);
-                                buildingMap[tile.row][tile.col]=tile.Building;
-                                createHexMap(rows, cols);
-                            }
-                            
-                        };  
-                        functionValue.appendChild(buildButton);
-                    }
+                    makeBuildButton(tile, 1, "mainBuilding");
+                    makeBuildButton(tile, 2, "developmentBuilding");
+                    makeBuildButton(tile, 3, "shortUnitBuilding");
+                    makeBuildButton(tile, 4, "longUnitBuilding");
+                    makeBuildButton(tile, 5, "eliteUnitBuilding");
+
                     highlightNearbyTiles(selectedUnit, rows, cols); // 근처 타일 색상 변경
                 }
             }
@@ -490,17 +544,12 @@ canvas.addEventListener("click", (event) => {
                         unitMap[tile.unit.row][tile.unit.col] = tile.unit;
                         unitMoved=true;
                         
-                        const buildButton = document.getElementById("build-button");
-                        if (buildButton) {
-                            buildButton.onclick = () => {
-                                if(!tile.Building){
-                                    const building = new Building(hexRadius)
-                                    tile.placeBuilding(building);
-                                    buildingMap[tile.row][tile.col]=tile.Building;
-                                    createHexMap(rows, cols);
-                                }
-                            };  
-                        }
+                        makeBuildButton(tile, 1, "mainBuilding");
+                        makeBuildButton(tile, 2, "developmentBuilding");
+                        makeBuildButton(tile, 3, "shortUnitBuilding");
+                        makeBuildButton(tile, 4, "longUnitBuilding");
+                        makeBuildButton(tile, 5, "eliteUnitBuilding");
+
                         selectedUnit = null; // 유닛을 이동시킨 후 선택 해제
                         createHexMap(rows, cols);
                     }
@@ -509,8 +558,18 @@ canvas.addEventListener("click", (event) => {
                             document.getElementById("name-value").textContent = " ";
                             document.getElementById("health-value").textContent = " ";
                             document.getElementById("function-value").textContent = " ";
-                            const buildButton = document.getElementById("build-button");
-                            if (buildButton) {buildButton.remove();}
+
+                            const Button1 = document.getElementById("Button_1");
+                            if (Button1) {Button1.remove();}
+                            const Button2 = document.getElementById("Button_2");
+                            if (Button2) {Button2.remove();}
+                            const Button3 = document.getElementById("Button_3");
+                            if (Button3) {Button3.remove();}
+                            const Button4 = document.getElementById("Button_4");
+                            if (Button4) {Button4.remove();}
+                            const Button5 = document.getElementById("Button_5");
+                            if (Button5) {Button5.remove();}
+                            
                             createHexMap(rows, cols);
                         }
                     }
@@ -522,7 +581,7 @@ canvas.addEventListener("click", (event) => {
                     // 건물의 정보를 <div class="status">에 표시
                     document.getElementById("name-value").textContent = selectedBuilding.name || "유닛 이름";
                     document.getElementById("health-value").textContent = `체력: ${selectedBuilding.health || 100}`;
-                    document.getElementById("function-value").textContent = "기능: 건물이다";
+                    document.getElementById("function-value").textContent = `기능: ${selectedBuilding.description}`;
                
                     createHexMap(rows, cols);
                 }
@@ -625,6 +684,77 @@ moveSpeedSlider.addEventListener("input", (event) => {
     moveSpeed = parseInt(event.target.value);
     moveSpeedValue.textContent = moveSpeed;  // 슬라이더 값 표시
 });
+
+function makeBuildButton(tile, number=1, whatBuilding) {
+    if (!document.getElementById(`Button_${number}`)) {
+        const functionValue_1 = document.getElementById(`button-${number}`);
+        const Button_1 = document.createElement(`button-${number}`);
+        Button_1.id = `Button_${number}`;
+        Button_1.textContent = "건설하기";
+        Button_1.onclick = () => {
+            if (!tile.Building) {
+                let building;
+                switch (whatBuilding) {
+                    case "mainBuilding":
+                        building = new mainBuilding(hexRadius);
+                        break;
+                    case "developmentBuilding":
+                        building = new developmentBuilding(hexRadius);
+                        break;
+                    case "shortUnitBuilding":
+                        building = new meleeUnitBuilding(hexRadius);
+                        break;
+                    case "longUnitBuilding":
+                        building = new rangedUnitBuilding(hexRadius);
+                        break;
+                    case "eliteUnitBuilding":
+                        building = new eliteUnitBuilding(hexRadius);
+                        break;
+                    default:
+                        console.error(`알 수 없는 건물 유형: ${whatBuilding}`);
+                        return;
+                }
+                tile.placeBuilding(building);
+                buildingMap[tile.row][tile.col] = tile.Building;
+                createHexMap(rows, cols);
+            }
+        };
+        functionValue_1.appendChild(Button_1);
+    }
+    else{
+        const Button_1 = document.getElementById(`Button_${number}`);
+        if (Button_1) {
+            Button_1.onclick = () => {
+                if(!tile.Building){
+                    let building;
+                    switch (whatBuilding) {
+                        case "mainBuilding":
+                            building = new mainBuilding(hexRadius);
+                            break;
+                        case "developmentBuilding":
+                            building = new developmentBuilding(hexRadius);
+                            break;
+                        case "shortUnitBuilding":
+                            building = new meleeUnitBuilding(hexRadius);
+                            break;
+                        case "longUnitBuilding":
+                            building = new rangedUnitBuilding(hexRadius);
+                            break;
+                        case "eliteUnitBuilding":
+                            building = new eliteUnitBuilding(hexRadius);
+                            break;
+                        default:
+                            console.error(`알 수 없는 건물 유형: ${whatBuilding}`);
+                            return;
+                    }
+                    tile.placeBuilding(building);
+                    buildingMap[tile.row][tile.col]=tile.Building;
+                    createHexMap(rows, cols);
+                }
+            };  
+        }
+    }
+}
 
 // 맵을 그리는 함수
 function drawMap() {

@@ -40,12 +40,13 @@
         }
 
         .status {
-            position: relative;  /* 절대 위치에서 상대 위치로 변경 */
+            display: grid;
+            grid-template-columns: 2fr 3fr 5fr; /* 각 열의 비율을 지정 */
+            grid-template-rows: 1fr 1fr 1fr;
+            gap: 10px; /* 열과 열 사이에 간격 추가 */
             width: 1000px;
-            margin-top: 5x;     /* canvas와 status 사이에 여백을 추가 */
-            top: 5px;
-            left: 5px;
-            padding: 5px;
+            margin-top: 5px; /* canvas와 status 사이에 여백을 추가 */
+            padding: 10px;
             background-color: #f0f0f0;
             border-radius: 5px;
             border: 2px solid #ccc;
@@ -53,24 +54,34 @@
             font-size: 15px; /* 폰트 크기 설정 */
             font-weight: bold; /* 폰트 두께 설정 */
             text-align: center;
+            align-items: center;   /* 수직 중앙 정렬 */
         }
 
-        .row {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 5px;
-        }
-
-        .row div {
-            display: flex;             /* flexbox로 설정 */
-            justify-content: center;   /* 가로로 중앙 정렬 */
-            align-items: center;       /* 세로로 중앙 정렬 */
-            flex: 1;  /* 기본적으로 동일한 비율로 배치 */
+        .status div {
             padding: 5px;
-            text-align: center;
             border: 1px solid #ccc; /* 테두리 추가 */
             border-radius: 5px;
-            min-height: 30px; /* 각 열의 최소 높이를 지정 */
+            text-align: center;
+            min-height: 25px; /* 최소 높이 설정 */
+        }
+
+        .merged-cell {
+            grid-column: span 1; /* 두 열에 걸쳐서 병합 */
+            grid-row: span 2;     /* 두 행을 병합하여 차지 */
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            text-align: center;
+            align-items: center;   /* 수직 중앙 정렬 */
+        }
+
+        .button-row {
+            grid-template-columns: repeat(5, 1fr); /* 5개의 열 추가 */
+            display: grid;
+            gap: 10px;
+            grid-column: 3 / 4; /* 버튼 열 바로 아래로 설정 */
+            grid-row: 3;         /* 새로운 행을 4번째 행에 위치 */
+            border: none;  
         }
 
         /* 각 열의 가중치를 다르게 설정 */
@@ -82,18 +93,18 @@
             flex: 3;  /* '체력' 열은 세 배 크기 */
         }
 
-        #function, #function-value {
-            flex: 4;  /* '기능' 열은 네 배 크기 */
+        #function, #function-value, #function-button {
+            flex: 5;  /* '기능' 열은 네 배 크기 */
         }
 
-        #build-button {
+        #Button_1, #Button_2, #Button_3, #Button_4, #Button_5 {
             margin-left: 5px;  /* "기능"과 버튼 사이 간격 */
             font-family: 'Arial', sans-serif;
             font-size: 15px;
             font-weight: bold;
             color: #fff;
             background-color: #4CAF50;
-            padding: 5px 5px;
+            padding: 2px 2px;
             border: none;
             border-radius: 5px;
             cursor: pointer;
@@ -118,15 +129,20 @@
     <canvas id="hexMap" width="1000" height="450"></canvas>
 
     <div class="status">
-        <div class="row">
-            <div id="name">이름</div>
-            <div id="health">체력</div>
-            <div id="function">기능</div>
-        </div>
-        <div class="row">
-            <div id="name-value"> </div>
-            <div id="health-value"> </div>
-            <div id="function-value"> </div>
+        <div id="name">이름</div>
+        <div id="health">체력</div>
+        <div id="function">기능</div>
+        
+        <div id="name-value" class="merged-cell"></div> 
+        <div id="health-value" class="merged-cell"></div>
+        <div id="function-value"></div>
+
+        <div class="button-row">
+            <div id="button-1"></div>
+            <div id="button-2"></div>
+            <div id="button-3"></div>
+            <div id="button-4"></div>
+            <div id="button-5"></div>
         </div>
     </div>
 
