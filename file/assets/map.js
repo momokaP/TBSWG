@@ -22,6 +22,7 @@ let startX, startY; // 마우스 드래그 시작 위치 x,y
 let moveSpeed = 100; // 한 번에 이동할 거리 (픽셀 단위
 canvas.tabIndex = 1000;  // tabIndex를 설정하여 캔버스가 포커스를 받을 수 있게 합니다.
 let selectedUnit = null; // 현재 선택된 유닛
+let oldSelectedUnit = null; // 이전에 선택된 유닛
 let selectedBuilding = null; //현재 선택된 건물
 
 const hexMap = []; // 육각형 타일 정보를 저장할 배열
@@ -216,25 +217,29 @@ class Unit {
 
 class buildUnit extends Unit{
     constructor(size, color = 'blue', name = "건설 유닛", health = 50) {
-        super(size, color, name, health);   
+        super(size, color, name, health);  
+        this.description = "이동과 건설을 할 수 있는 유닛이다"; 
     }
 }
 
 class meleeUnit extends Unit{
-    constructor(size, color = 'slateblue', name = "근접 유닛", health = 150) {
-        super(size, color, name, health);   
+    constructor(size, color = 'lime', name = "근접 유닛", health = 150) {
+        super(size, color, name, health);  
+        this.description = "근접 공격을 할 수 있는 유닛이다";  
     }
 }
 
 class rangedUnit extends Unit{
-    constructor(size, color = 'steelblue', name = "원거리 유닛", health = 100) {
+    constructor(size, color = 'peru', name = "원거리 유닛", health = 100) {
         super(size, color, name, health);   
+        this.description = "원거리 공격을 할 수 있는 유닛이다";
     }
 }
 
 class eliteUnit extends Unit{
-    constructor(size, color = 'royalblue', name = "엘리트 유닛", health = 200) {
+    constructor(size, color = 'olive', name = "엘리트 유닛", health = 200) {
         super(size, color, name, health);   
+        this.description = "기동력이 좋은 유닛이다";
     }
 }
 
@@ -381,11 +386,21 @@ function createHexMap(rows, cols) {
             // 특정 타일에 유닛 배치 (예: (2,2) 위치에 유닛)
             if (initial === true && 
                 row === initial_unit_row && col === initial_unit_col) {
+                console.log("initial");
+
                 initial = false
                 const unit = new buildUnit(hexRadius/2); // 유닛 크기와 색상 설정
                 unitMap[row][col] = unit;
-                console.log("initial");
                 tile.placeUnit(unit); // 타일에 유닛 배치
+                
+                // 테스트 용
+                const unit2 = new buildUnit(hexRadius/2); // 유닛 크기와 색상 설정
+                unitMap[20][20] = unit2;
+                tile.placeUnit(unit2); // 타일에 유닛 배치
+
+                const unit3 = new meleeUnit(hexRadius/2); // 유닛 크기와 색상 설정
+                unitMap[19][19] = unit3;
+                tile.placeUnit(unit3); // 타일에 유닛 배치
             }
 
             if (buildingMap[row] && buildingMap[row][col]){
@@ -493,18 +508,19 @@ canvas.addEventListener("click", (event) => {
                     unitClicked = true;
 
                     // 유닛의 정보를 <div class="status">에 표시
-                    document.getElementById("name-value").textContent = selectedUnit.name || "유닛 이름";
-                    document.getElementById("health-value").textContent = `체력: ${selectedUnit.health || 100}`;
-                    document.getElementById("function-value").textContent = "기능: 이동, 건설하기";
+                    document.getElementById("name-value").textContent = selectedUnit.name;
+                    document.getElementById("health-value").textContent = `체력: ${selectedUnit.health}`;
+                    document.getElementById("function-value").textContent = `기능: ${selectedUnit.description}`;
                     
-                    // 기능에 유닛의 건설하기 버튼 추가
-                    makeBuildButton(tile, 1, "mainBuilding");
-                    makeBuildButton(tile, 2, "developmentBuilding");
-                    makeBuildButton(tile, 3, "shortUnitBuilding");
-                    makeBuildButton(tile, 4, "longUnitBuilding");
-                    makeBuildButton(tile, 5, "eliteUnitBuilding");
+                    clearButton();
+                    switchcase_makeButton(tile);
 
+                    if(selectedUnit !== oldSelectedUnit) {
+                        createHexMap(rows, cols);
+                    }
                     highlightNearbyTiles(selectedUnit, rows, cols); // 근처 타일 색상 변경
+                    
+                    oldSelectedUnit = selectedUnit;
                 }
             }
             catch (err){
@@ -543,12 +559,9 @@ canvas.addEventListener("click", (event) => {
                         tile.placeUnit(selectedUnit);
                         unitMap[tile.unit.row][tile.unit.col] = tile.unit;
                         unitMoved=true;
-                        
-                        makeBuildButton(tile, 1, "mainBuilding");
-                        makeBuildButton(tile, 2, "developmentBuilding");
-                        makeBuildButton(tile, 3, "shortUnitBuilding");
-                        makeBuildButton(tile, 4, "longUnitBuilding");
-                        makeBuildButton(tile, 5, "eliteUnitBuilding");
+
+                        clearButton();
+                        switchcase_makeButton(tile);
 
                         selectedUnit = null; // 유닛을 이동시킨 후 선택 해제
                         createHexMap(rows, cols);
@@ -559,22 +572,14 @@ canvas.addEventListener("click", (event) => {
                             document.getElementById("health-value").textContent = " ";
                             document.getElementById("function-value").textContent = " ";
 
-                            const Button1 = document.getElementById("Button_1");
-                            if (Button1) {Button1.remove();}
-                            const Button2 = document.getElementById("Button_2");
-                            if (Button2) {Button2.remove();}
-                            const Button3 = document.getElementById("Button_3");
-                            if (Button3) {Button3.remove();}
-                            const Button4 = document.getElementById("Button_4");
-                            if (Button4) {Button4.remove();}
-                            const Button5 = document.getElementById("Button_5");
-                            if (Button5) {Button5.remove();}
-                            
+                            clearButton();
+
                             createHexMap(rows, cols);
                         }
                     }
                 }
                 if (tile.Building && !unitMoved && tile.Building.isBuildingClicked(mouseX, mouseY, mapOffsetX, mapOffsetY)){
+                    // 건물을 클릭했을 때
                     selectedBuilding = tile.Building;
                     BuildingClicked=true;
 
@@ -583,6 +588,26 @@ canvas.addEventListener("click", (event) => {
                     document.getElementById("health-value").textContent = `체력: ${selectedBuilding.health || 100}`;
                     document.getElementById("function-value").textContent = `기능: ${selectedBuilding.description}`;
                
+                    clearButton();
+                        switch (true) {
+                            case selectedBuilding instanceof mainBuilding:
+                                makeUnitButton(tile,1,"mainBuilding");
+                                break;
+                            case selectedBuilding instanceof developmentBuilding:
+                                break;
+                            case selectedBuilding instanceof meleeUnitBuilding:
+                                makeUnitButton(tile,1,"meleeUnitBuilding");
+                                break;
+                            case selectedBuilding instanceof rangedUnitBuilding:
+                                makeUnitButton(tile,1,"rangedUnitBuilding");
+                                break;
+                            case selectedBuilding instanceof eliteUnitBuilding:
+                                makeUnitButton(tile,1,"eliteUnitBuilding");
+                                break;
+                            default:
+                                console.log("Building은 다른 클래스의 인스턴스입니다.");
+                        }
+
                     createHexMap(rows, cols);
                 }
             });
@@ -685,6 +710,40 @@ moveSpeedSlider.addEventListener("input", (event) => {
     moveSpeedValue.textContent = moveSpeed;  // 슬라이더 값 표시
 });
 
+function switchcase_makeButton(tile) {
+    switch (true) {
+        case selectedUnit instanceof buildUnit:
+            // 건설 유닛이면 기능에 유닛의 건설하기 버튼 추가
+            makeBuildButton(tile, 1, "mainBuilding");
+            makeBuildButton(tile, 2, "developmentBuilding");
+            makeBuildButton(tile, 3, "meleeUnitBuilding");
+            makeBuildButton(tile, 4, "rangedUnitBuilding");
+            makeBuildButton(tile, 5, "eliteUnitBuilding");
+            break;
+        case selectedUnit instanceof meleeUnit:
+            break;
+        case selectedUnit instanceof rangedUnit:
+            break;
+        case selectedUnit instanceof eliteUnit:
+            break;
+        default:
+            console.log("unit은 다른 클래스의 인스턴스입니다.");
+    }
+}
+
+function clearButton() {
+    const Button1 = document.getElementById("Button_1");
+    if (Button1) { Button1.remove(); }
+    const Button2 = document.getElementById("Button_2");
+    if (Button2) { Button2.remove(); }
+    const Button3 = document.getElementById("Button_3");
+    if (Button3) { Button3.remove(); }
+    const Button4 = document.getElementById("Button_4");
+    if (Button4) { Button4.remove(); }
+    const Button5 = document.getElementById("Button_5");
+    if (Button5) { Button5.remove(); }
+}
+
 function makeBuildButton(tile, number=1, whatBuilding) {
     if (!document.getElementById(`Button_${number}`)) {
         const functionValue_1 = document.getElementById(`button-${number}`);
@@ -692,32 +751,7 @@ function makeBuildButton(tile, number=1, whatBuilding) {
         Button_1.id = `Button_${number}`;
         Button_1.textContent = "건설하기";
         Button_1.onclick = () => {
-            if (!tile.Building) {
-                let building;
-                switch (whatBuilding) {
-                    case "mainBuilding":
-                        building = new mainBuilding(hexRadius);
-                        break;
-                    case "developmentBuilding":
-                        building = new developmentBuilding(hexRadius);
-                        break;
-                    case "shortUnitBuilding":
-                        building = new meleeUnitBuilding(hexRadius);
-                        break;
-                    case "longUnitBuilding":
-                        building = new rangedUnitBuilding(hexRadius);
-                        break;
-                    case "eliteUnitBuilding":
-                        building = new eliteUnitBuilding(hexRadius);
-                        break;
-                    default:
-                        console.error(`알 수 없는 건물 유형: ${whatBuilding}`);
-                        return;
-                }
-                tile.placeBuilding(building);
-                buildingMap[tile.row][tile.col] = tile.Building;
-                createHexMap(rows, cols);
-            }
+            switchcase_buildButton();
         };
         functionValue_1.appendChild(Button_1);
     }
@@ -725,33 +759,82 @@ function makeBuildButton(tile, number=1, whatBuilding) {
         const Button_1 = document.getElementById(`Button_${number}`);
         if (Button_1) {
             Button_1.onclick = () => {
-                if(!tile.Building){
-                    let building;
-                    switch (whatBuilding) {
-                        case "mainBuilding":
-                            building = new mainBuilding(hexRadius);
-                            break;
-                        case "developmentBuilding":
-                            building = new developmentBuilding(hexRadius);
-                            break;
-                        case "shortUnitBuilding":
-                            building = new meleeUnitBuilding(hexRadius);
-                            break;
-                        case "longUnitBuilding":
-                            building = new rangedUnitBuilding(hexRadius);
-                            break;
-                        case "eliteUnitBuilding":
-                            building = new eliteUnitBuilding(hexRadius);
-                            break;
-                        default:
-                            console.error(`알 수 없는 건물 유형: ${whatBuilding}`);
-                            return;
-                    }
-                    tile.placeBuilding(building);
-                    buildingMap[tile.row][tile.col]=tile.Building;
-                    createHexMap(rows, cols);
-                }
+                switchcase_buildButton();
             };  
+        }
+    }
+
+    function switchcase_buildButton() {
+        if (!tile.Building) {
+            let building;
+            switch (whatBuilding) {
+                case "mainBuilding":
+                    building = new mainBuilding(hexRadius);
+                    break;
+                case "developmentBuilding":
+                    building = new developmentBuilding(hexRadius);
+                    break;
+                case "meleeUnitBuilding":
+                    building = new meleeUnitBuilding(hexRadius);
+                    break;
+                case "rangedUnitBuilding":
+                    building = new rangedUnitBuilding(hexRadius);
+                    break;
+                case "eliteUnitBuilding":
+                    building = new eliteUnitBuilding(hexRadius);
+                    break;
+                default:
+                    console.log(`알 수 없는 건물 유형: ${whatBuilding}`);
+            }
+            tile.placeBuilding(building);
+            buildingMap[tile.row][tile.col] = tile.Building;
+            createHexMap(rows, cols);
+        }
+    }
+}
+
+function makeUnitButton(tile, number=1, whatBuilding) {
+    if (!document.getElementById(`Button_${number}`)) {
+        const functionValue_1 = document.getElementById(`button-${number}`);
+        const Button_1 = document.createElement(`button-${number}`);
+        Button_1.id = `Button_${number}`;
+        Button_1.textContent = "생산하기";
+        Button_1.onclick = () => {
+            switchcase_unitButton();
+        };
+        functionValue_1.appendChild(Button_1);
+    }
+    else{
+        const Button_1 = document.getElementById(`Button_${number}`);
+        if (Button_1) {
+            Button_1.onclick = () => {
+                switchcase_unitButton();
+            };  
+        }
+    }
+
+    function switchcase_unitButton() {
+        if (!tile.Unit) {
+            let unit;
+            switch (whatBuilding) {
+                case "mainBuilding":
+                    unit = new buildUnit(hexRadius / 2);
+                    break;
+                case "meleeUnitBuilding":
+                    unit = new meleeUnit(hexRadius / 2);
+                    break;
+                case "rangedUnitBuilding":
+                    unit = new rangedUnit(hexRadius / 2);
+                    break;
+                case "eliteUnitBuilding":
+                    unit = new eliteUnit(hexRadius / 2);
+                    break;
+                default:
+                    console.log(`알 수 없는 건물 유형: ${whatBuilding}`);
+            }
+            tile.placeUnit(unit);
+            unitMap[tile.unit.row][tile.unit.col] = tile.unit;
+            createHexMap(rows, cols);
         }
     }
 }
