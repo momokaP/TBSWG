@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TBSWB</title>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+    <header id="header"> <!-- header에 id 추가 -->
+        <div class="container">
+            <a href="/" class="logo">TBSWB</a>
+            <div class="auth-buttons">
+                <a href="/login">
+                <button class="button" id="loginBtn">로그인</button>
+                </a>
+                <a href="/register">
+                <button class="button button-primary" id="registerBtn">회원가입</button>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero" id="hero"> <!-- hero에 id 추가 -->
+            <div class="container">
+                <h1>TBSWB에 오신 것을 환영합니다!</h1>
+                <p>최고의 게임을 즐기세요. 지금 바로 시작하세요!</p>
+                <a href="/game" class="button button-primary">게임 시작하기</a>
+            </div>
+        </section>
+    </main>
+
+    <footer id="footer"> <!-- footer에 id 추가 -->
+        <div class="container">
+            <p>&copy; TBSWB</p>
+        </div>
+    </footer>
+
+    <script>
+        // 브라우저 화면 크기 구하고, 헤더와 푸터 높이를 빼서 hero의 높이 설정
+        function adjustHeroHeight() {
+            var heroSection = document.getElementById('hero');
+            var header = document.getElementById('header');
+            var footer = document.getElementById('footer');
+            
+            if (!heroSection || !header || !footer) {
+                console.error('Required elements not found.');
+                return;
+            }
+
+            var viewportHeight = window.innerHeight;  // 브라우저의 높이
+            var headerHeight = header.offsetHeight;  // 헤더의 높이
+            var footerHeight = footer.offsetHeight;  // 푸터의 높이
+
+            // hero 섹션의 높이를 계산하여 적용 (전체 화면 높이에서 헤더와 푸터 높이를 뺌)
+            heroSection.style.height = (viewportHeight - headerHeight - 2*footerHeight) + 'px';
+        }
+
+        // DOM이 완전히 로드된 후 hero 섹션 크기 조정
+        document.addEventListener('DOMContentLoaded', adjustHeroHeight);
+
+        // 화면 크기 변경 시 hero 섹션 크기 조정
+        window.addEventListener('resize', adjustHeroHeight);
+    </script>
+</body>
+</html>

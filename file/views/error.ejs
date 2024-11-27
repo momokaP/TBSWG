@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>에러</title>
+  <link rel="stylesheet" href="css/login_resiger.css">
+</head>
+<body>
+  <header class="border">
+    <div class="container ">
+      <nav>
+        <a href="/" class="logo">TBSWB</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="site-main">
+    <div class="card">
+
+      <div class="card-header">
+        <h1 class="card-title">에러</h1>
+        <p class="card-description"><%- errorMessage %></p>
+      </div>
+
+      <div class="card-footer">
+        <div class="text-button-wrap">
+          <a href="<%= redirectLink %>" class="text-button"><%= redirectText %></a>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</body>
+</html>

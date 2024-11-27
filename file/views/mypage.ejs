@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>마이페이지</title>
+  <link rel="stylesheet" href="css/login_resiger.css">
+</head>
+<body>
+  <header class="border">
+    <div class="container ">
+      <nav>
+        <a href="/" class="logo">TBSWB</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="site-main">
+    <div class="card">
+
+      <div class="card-header">
+        <h1 class="card-title">마이페이지</h1>
+        <p class="card-description"><%- Message %></p>
+      </div>
+
+      <div class="card-footer">
+        <div class="text-button-wrap">
+          <a href="/" class="text-button-mypage">메인으로</a>
+          <form id="deleteForm" action="/mypage/?_method=DELETE" method="POST" class="delete">
+            <button class="button" type="submit">계정 삭제</button>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</body>
+</html>

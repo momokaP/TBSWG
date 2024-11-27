@@ -1,0 +1,89 @@
+/* 전체 스타일 */
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    line-height: 1.6;
+}
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* 헤더 스타일 */
+header {
+    background-color: #1a202c;
+    color: white;
+    padding: 1rem 0;
+}
+header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+header a {
+    color: white;
+    text-decoration: none;
+}
+nav ul {
+    list-style: none;
+    display: flex;
+    gap: 1rem;
+}
+.auth-buttons button {
+    margin-left: 0.5rem;
+}
+
+/* 히어로 섹션 스타일 */
+.hero {
+    background: linear-gradient(to right, #243447, #36D1DC);
+    color: white;
+    text-align: center;
+    padding: 4rem 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    min-height: 200px; 
+    min-width: 450px;
+}
+.hero h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+/* 푸터 스타일 */
+footer {
+    background-color: #1a202c;
+    color: white;
+    text-align: center;
+    padding: 1rem 0;
+    margin-top: auto;
+}
+
+/* 버튼 스타일 */
+.button {
+    display: inline-block;
+    background-color: #4a5568;
+    color: white;
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+}
+.button:hover {
+    background-color: #2d3748;
+}
+.button-primary {
+    background-color: #4299e1;
+}
+.button-primary:hover {
+    background-color: #3182ce;
+}
