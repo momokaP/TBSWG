@@ -3,8 +3,6 @@ import {
     gameSettings, prices, limits, 
     unitMovement, userInfo, state, 
     hexMap, unitMap, buildingMap, user} from "./map.js";import { buildUnit, meleeUnit, rangedUnit, eliteUnit } from "./UnitClass.js";
-import { mainBuilding, developmentBuilding, meleeUnitBuilding, rangedUnitBuilding, eliteUnitBuilding } from "./BuildingClass.js";
-import { User} from "./UserClass.js";
 
 // 육각형 타일 클래스 정의
 export class HexTile {

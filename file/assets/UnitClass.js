@@ -4,9 +4,6 @@ import {
     unitMovement, userInfo, state, 
     hexMap, unitMap, buildingMap, user} from "./map.js";
 import { createHexMap } from "./CenterRelatedFunc.js";
-import { HexTile } from "./HexTileClass.js";
-import { mainBuilding, developmentBuilding, meleeUnitBuilding, rangedUnitBuilding, eliteUnitBuilding } from "./BuildingClass.js";
-import { User} from "./UserClass.js";
 
 class Unit {
     constructor(size = 20, color = 'blue', name = "유닛1", health = 101, move = 2) {

@@ -4,206 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hex Tile Map</title>
-    <style>
-        /* body를 flexbox로 설정하여 중앙 정렬 */
-        body {
-            display: flex;
-            flex-direction: column; /* 세로 방향으로 배치 */
-            justify-content: center; /* 가로로 중앙 정렬 */
-            align-items: center;     /* 세로로 중앙 정렬 */
-            height: 100vh;           /* 화면 전체 높이 사용 */
-            margin: 0;               /* 기본 margin 제거 */
-            background-color: #f0f0f0; /* 배경색 설정 */
-        }
-
-        canvas {
-            border: 1px solid black;
-        }
-
-        .controls {
-            margin-bottom: 1px;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-
-            font-family: 'Arial', sans-serif; /* 폰트 패밀리 설정 */
-            font-size: 15px; /* 폰트 크기 설정 */
-            font-weight: bold; /* 폰트 두께 설정 */
-        }
-
-        .controls label {
-            margin: 1px;
-        }
-
-        .controls input {
-            margin: 1px;
-        }
-
-        .status {
-            display: grid;
-            grid-template-columns: 2fr 2fr 2fr 5fr; /* 각 열의 비율을 지정 */
-            grid-template-rows: 1fr 1fr 1fr;
-            gap: 1px; /* 열과 열 사이에 간격 추가 */
-            width: 1000px;
-            margin-top: 1px; /* canvas와 status 사이에 여백을 추가 */
-            padding: 1px;
-            background-color: #f0f0f0;
-            border-radius: 5px;
-            border: 2px solid #ccc;
-            font-family: Arial, sans-serif;
-            font-size: 15px; /* 폰트 크기 설정 */
-            font-weight: bold; /* 폰트 두께 설정 */
-            text-align: center;
-            align-items: center;   /* 수직 중앙 정렬 */
-        }
-
-        .status div {
-            padding: 1px;
-            border: 1px solid #ccc; /* 테두리 추가 */
-            border-radius: 5px;
-            text-align: center;
-            min-height: 25px; /* 최소 높이 설정 */
-        }
-
-        .merged-cell {
-            grid-column: span 1; /* 두 열에 걸쳐서 병합 */
-            grid-row: span 2;     /* 두 행을 병합하여 차지 */
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            text-align: center;
-            align-items: center;   /* 수직 중앙 정렬 */
-        }
-
-        .button-row {
-            grid-template-columns: repeat(5, 1fr); /* 5개의 열 추가 */
-            display: grid;
-            gap: 10px;
-            grid-column: 4 / 4; /* 버튼 열 바로 아래로 설정 */
-            grid-row: 3;         /* 새로운 행을 4번째 행에 위치 */
-            border: none;  
-        }
-
-                
-        #owner-value {
-            grid-row: 3; /* 3번째 행 */
-            grid-column: 1 / 2; /* 1번째 열 */
-            display: flex;
-            justify-content: center;
-            text-align: center;
-            align-items: center;   /* 수직 중앙 정렬 */
-        }
-
-        /* 각 열의 가중치를 다르게 설정 */
-        #name, #name-value {
-            flex: 2;  /* '이름' 열은 두 배 크기 */
-        }
-
-        #health, #health-value {
-            flex: 3;  /* '체력' 열은 세 배 크기 */
-        }
-
-        #move, #move-value {
-            flex: 3;  /* '이동력' 열은 세 배 크기 */
-        }
-
-        #function, #function-value, #function-button {
-            flex: 5;  /* '기능' 열은 네 배 크기 */
-        }
-
-        #Button_1, #Button_2, #Button_3, #Button_4, #Button_5 {
-            margin-left: 5px;  /* "기능"과 버튼 사이 간격 */
-            font-family: 'Arial', sans-serif;
-            font-size: 15px;
-            font-weight: bold;
-            color: #fff;
-            background-color: #4CAF50;
-            padding: 2px 2px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;  /* 색상 변환에 애니메이션 효과 */
-        }
-
-        /* 버튼을 클릭했을 때 색상 변화 */
-        #build-button:active {
-            background-color: #45a049; /* 클릭 시 색상 */
-        }
-
-        .turn-container {
-            display: flex;
-            align-items: center;
-            justify-content: center; /* 버튼과 텍스트를 가로로 중앙 정렬 */
-            gap: 10px; /* 텍스트와 버튼 사이 간격 추가 */
-            border: 2px solid #ccc; /* 테두리 추가 (색상: #ccc, 두께: 2px) */
-            padding: 5px; /* 테두리 안쪽 여백 추가 */
-            border-radius: 10px; /* 둥근 테두리 추가 */
-            margin-top: 3px;
-            margin-bottom: 3px; /* 맨 아래 여백 추가 */
-        }
-
-        #turn {
-            padding: 5px 10px;  /* 텍스트와 테두리 사이에 여백 추가 */
-            background-color: #e0e0e0; /* 배경색 */
-            border-radius: 5px;  /* 테두리 둥글게 */
-            font-weight: bold;   /* 글씨를 굵게 */
-        }
-
-
-        #nextTurnButton {
-            padding: 5px 10px;
-            font-family: 'Arial', sans-serif;
-            font-size: 15px;
-            font-weight: bold;
-            color: #fff;
-            background-color: #4CAF50;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        #nextTurnButton:active {
-            background-color: #45a049;
-        }
-    </style>
+    <link rel="stylesheet" href="css/game.css">
 </head>
 <body>
-    <div class="controls">
-        <label for="tileSizeSlider">타일 크기: <span id="tileSizeValue">50</span></label>
-        <input type="range" id="tileSizeSlider" min="10" max="100" value="50">
-        
-        <label for="moveSpeedSlider">맵 이동 속도 (키보드): <span id="moveSpeedValue">100</span></label>
-        <input type="range" id="moveSpeedSlider" min="1" max="100" value="100">
-    </div>
-
-    <canvas id="hexMap" width="1000" height="450"></canvas>
-
-    <div class="turn-container">
-        <div id="turn">턴</div>
-        <button id="nextTurnButton">턴 넘기기</button>
-    </div>
-
-    <div class="status">
-        <div id="name">이름</div>
-        <div id="health">체력</div>
-        <div id="move">이동력</div>
-        <div id="function">기능</div>
-        
-        <div id="name-value"></div> 
-        <div id="owner-value"></div> 
-        <div id="health-value" class="merged-cell"></div>
-        <div id="move-value" class="merged-cell"></div>
-        <div id="function-value"></div>
-
-        <div class="button-row">
-            <div id="button-1"></div>
-            <div id="button-2"></div>
-            <div id="button-3"></div>
-            <div id="button-4"></div>
-            <div id="button-5"></div>
+    <header class="header">
+        <div class="header-container ">
+          <nav>
+            <a href="/" class="logo">TBSWB</a>
+          </nav>
         </div>
-    </div>
+    </header>
+
+    <main>
+        <div class="controls">
+            <div class="slider-item">
+                <label for="tileSizeSlider">타일 크기: <span id="tileSizeValue">50</span></label>
+                <input type="range" id="tileSizeSlider" min="10" max="100" value="50">
+            </div>
+
+            <div class="slider-item empty"></div>
+            
+            <div class="slider-item">
+                <label for="moveSpeedSlider">맵 이동 속도 (키보드): <span id="moveSpeedValue">50</span></label>
+                <input type="range" id="moveSpeedSlider" min="1" max="100" value="50">
+            </div>
+        </div>
+        
+        <canvas id="hexMap" width="1000" height="400"></canvas>
+        
+        <div class="turn-container">
+            <div id="turn">턴</div>
+            <button id="nextTurnButton">턴 넘기기</button>
+        </div>
+    </main>
+    
+    <footer>
+        <div class="status">
+            <div id="name">이름</div>
+            <div id="health">체력</div>
+            <div id="move">이동력</div>
+            <div id="function">기능</div>
+            
+            <div id="name-value"></div> 
+            <div id="owner-value"></div> 
+            <div id="health-value" class="merged-cell"></div>
+            <div id="move-value" class="merged-cell"></div>
+            <div id="function-value"></div>
+
+            <div class="button-row">
+                <div id="button-1"></div>
+                <div id="button-2"></div>
+                <div id="button-3"></div>
+                <div id="button-4"></div>
+                <div id="button-5"></div>
+            </div>
+        </div>
+    </footer>
 
     <script type="module" src="map.js"></script>
 

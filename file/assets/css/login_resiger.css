@@ -1,0 +1,162 @@
+body {
+  font-family: Arial, sans-serif;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+  background: linear-gradient(to right, #243447, #36D1DC);
+}
+
+.card {
+  width: 400px;
+  background: #1a202c;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.card-header, .card-footer {
+  padding: 16px;
+  border-bottom: 1px solid transparent;
+}
+
+.card-content {
+  padding: 16px;
+}
+
+.card-title {
+  color: white;
+  font-size: 1.5em;
+  margin-bottom: 8px;
+}
+
+.card-description {
+  color: white;
+  font-size: 0.9em;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+label {
+  color: white;
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.9em;
+}
+
+input {
+  width: 95%;
+  padding: 8px;
+  font-size: 1em;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  background-color: #4299e1;
+  color: white;
+  font-size: 1em;
+  text-align: center;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.button:hover {
+  background-color: #3182ce;
+}
+
+.text-button-wrap {
+  display: flex;            /* Flexbox로 정렬을 사용 */
+  justify-content: center;  /* 수평 중앙 정렬 */
+  align-items: center;      /* 수직 중앙 정렬 */
+  margin-top: 8px;
+}
+
+.text-button {
+  width: 100%;
+  text-align: center;
+  background-color: #4CAF50; /* 버튼 배경 색 */
+  color: white;              /* 텍스트 색 */
+  padding: 10px 20px;        /* 여백 (상하 10px, 좌우 20px) */
+  font-size: 16px;           /* 글씨 크기 */
+  text-decoration: none;     /* 링크 밑줄 없애기 */
+  border-radius: 5px;        /* 모서리 둥글게 */
+  transition: background-color 0.3s ease; /* 배경색 변화 애니메이션 */
+  margin-right: auto;
+}
+
+.text-button-mypage {
+  text-align: center;
+  background-color: #4CAF50; /* 버튼 배경 색 */
+  color: white;              /* 텍스트 색 */
+  padding: 10px 20px;        /* 여백 (상하 10px, 좌우 20px) */
+  font-size: 16px;           /* 글씨 크기 */
+  text-decoration: none;     /* 링크 밑줄 없애기 */
+  border-radius: 5px;        /* 모서리 둥글게 */
+  transition: background-color 0.3s ease; /* 배경색 변화 애니메이션 */
+  margin-right: auto;
+}
+
+/* 마우스를 올렸을 때 효과 */
+.text-button:hover {
+  background-color: #45a049; /* 배경색 어두운 녹색으로 변화 */
+}
+
+.error {
+  color: red;
+  font-size: 0.9em;
+  margin-top: 8px;
+  height: 0px; /* 경고 메시지의 고정된 높이 설정 */
+  line-height: 20px; /* 텍스트 수직 정렬을 위해 높이와 동일하게 설정 */
+  visibility: hidden; /* 초기 상태에서는 메시지를 숨김 */
+}
+
+.error.show {
+  visibility: visible; /* 오류 메시지가 표시될 때 보이도록 설정 */
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 15px;
+  position: relative;
+}
+
+.border {
+  background-color: #1a202c;
+  color: white;
+  padding: 1rem 0;
+}
+
+.logo {
+  color: white;
+}
+
+header {
+  display: block; 
+  width: 100%;
+  margin-bottom: 20px; /* header와 main 사이의 간격 */
+  text-align: center;  /* 중앙 정렬 */
+}
+header nav {
+  width: 100%;
+  padding: 1em 0;
+}
+
+header nav a {
+  font-size: 1.5em;
+  font-weight: bold;
+}
+main {
+  margin: 20px auto; /* 상하 간격 및 가로 중앙 정렬 */
+  display: block;
+  width: 400px; /* main의 너비를 카드와 동일하게 설정 */
+}
+
+  

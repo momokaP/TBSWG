@@ -1,0 +1,208 @@
+/* html과 body에 기본 margin을 모두 제거 */
+html, body {
+    margin: 0; /* 기본 margin 제거 */
+    padding: 0; /* 기본 padding 제거 */
+}
+
+/* body를 flexbox로 설정하여 중앙 정렬 */
+body {
+    display: flex;
+    flex-direction: column; /* 세로 방향으로 배치 */
+    align-items: center;     /* 세로로 중앙 정렬 */
+    height: 100vh;           /* 화면 전체 높이 사용 */
+    margin: 0;               /* 기본 margin 제거 */
+    background: linear-gradient(to right, #243447, #36D1DC);
+}
+
+canvas {
+    border: 1px solid black;
+}
+
+.controls {
+    margin-top: 10px;
+    margin-bottom: 1px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;     /* 세로로 중앙 정렬 */
+    font-family: 'Arial', sans-serif; /* 폰트 패밀리 설정 */
+    font-size: 15px; /* 폰트 크기 설정 */
+    font-weight: bold; /* 폰트 두께 설정 */
+    color:#fff;
+    background-color: #1a202c;
+    
+}
+
+.controls label {
+    margin: 1px;
+}
+
+.controls input {
+    margin: 1px;
+}
+
+/* 슬라이더 항목 */
+.slider-item {
+    display: flex;          /* 각 항목을 flex로 설정 */
+    align-items: center;    /* 항목들을 중앙 정렬 */
+}
+
+/* 가운데 영역 비우기 */
+.slider-item.empty {
+    flex: 1; /* 가운데 영역을 유연하게 만들어서 비워두기 */
+}
+
+.status {
+    display: grid;
+    grid-template-columns: 2fr 2fr 2fr 5fr; /* 각 열의 비율을 지정 */
+    grid-template-rows: 1fr 1fr 1fr;
+    gap: 1px; /* 열과 열 사이에 간격 추가 */
+    width: 1000px;
+    margin-top: 1px; /* canvas와 status 사이에 여백을 추가 */
+    margin-bottom: 5px;
+    padding: 5px;
+    background-color: #1a202c;
+    border-radius: 10px;
+    font-family: Arial, sans-serif;
+    font-size: 15px; /* 폰트 크기 설정 */
+    font-weight: bold; /* 폰트 두께 설정 */
+    color:#fff;
+    text-align: center;
+    align-items: center;   /* 수직 중앙 정렬 */
+    box-sizing: border-box; /* padding을 요소 크기에 포함시킴 */
+}
+
+.status div {
+    padding: 1px;
+    border: 2px solid #4ee1c649; /* 테두리 추가 */
+    border-radius: 10px;
+    text-align: center;
+    min-height: 25px; /* 최소 높이 설정 */
+}
+
+.merged-cell {
+    grid-column: span 1; /* 두 열에 걸쳐서 병합 */
+    grid-row: span 2;     /* 두 행을 병합하여 차지 */
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    align-items: center;   /* 수직 중앙 정렬 */
+}
+
+.button-row {
+    grid-template-columns: repeat(5, 1fr); /* 5개의 열 추가 */
+    display: grid;
+    gap: 10px;
+    grid-column: 4 / 4; /* 버튼 열 바로 아래로 설정 */
+    grid-row: 3;         /* 새로운 행을 4번째 행에 위치 */
+    border: none;  
+}
+
+        
+#owner-value {
+    grid-row: 3; /* 3번째 행 */
+    grid-column: 1 / 2; /* 1번째 열 */
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    align-items: center;   /* 수직 중앙 정렬 */
+}
+
+/* 각 열의 가중치를 다르게 설정 */
+#name, #name-value {
+    flex: 2;  /* '이름' 열은 두 배 크기 */
+}
+
+#health, #health-value {
+    flex: 3;  /* '체력' 열은 세 배 크기 */
+}
+
+#move, #move-value {
+    flex: 3;  /* '이동력' 열은 세 배 크기 */
+}
+
+#function, #function-value, #function-button {
+    flex: 5;  /* '기능' 열은 네 배 크기 */
+}
+
+#Button_1, #Button_2, #Button_3, #Button_4, #Button_5 {
+    margin-left: 5px;  /* "기능"과 버튼 사이 간격 */
+    font-family: 'Arial', sans-serif;
+    font-size: 15px;
+    font-weight: bold;
+    color: #fff;
+    background-color: #4CAF50;
+    padding: 2px 2px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;  /* 색상 변환에 애니메이션 효과 */
+}
+
+/* 버튼을 클릭했을 때 색상 변화 */
+#build-button:active {
+    background-color: #45a049; /* 클릭 시 색상 */
+}
+
+.turn-container {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* 버튼과 텍스트를 가로로 중앙 정렬 */
+    gap: 10px; /* 텍스트와 버튼 사이 간격 추가 */
+    padding: 5px; /* 테두리 안쪽 여백 추가 */
+    border-radius: 10px; /* 둥근 테두리 추가 */
+    margin-top: 3px;
+    margin-bottom: 3px; /* 맨 아래 여백 추가 */
+    width: 200px; /* 너비를 버튼 크기에 맞게 자동으로 조정 */
+    margin-left: auto;  /* 왼쪽 여백 자동 */
+    margin-right: auto; /* 오른쪽 여백 자동 */
+    background-color: #1a202c;
+}
+
+#turn {
+    padding: 5px 10px;  /* 텍스트와 테두리 사이에 여백 추가 */
+    background-color: #1a202c; /* 배경색 */
+    font-weight: bold;   /* 글씨를 굵게 */
+    color: #fff;
+}
+
+#nextTurnButton {
+    padding: 5px 10px;
+    font-family: 'Arial', sans-serif;
+    font-size: 15px;
+    font-weight: bold;
+    color: #fff;
+    background-color: #4ee1c686;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+#nextTurnButton:hover{
+    background-color: #4ee1c63e;
+}
+
+/* header가 화면 가로를 다 차지하도록 설정 */
+.header {
+    background-color: #1a202c;
+    color: white;
+    padding: 1rem 0;
+    width: 100%; /* 전체 화면 너비를 차지하도록 설정 */
+    box-sizing: border-box; /* 패딩을 포함한 전체 너비 계산 */
+    margin: 0; /* header 자체의 margin도 제거 */
+    text-align: center;  /* 중앙 정렬 */
+    font-weight: bold;
+}
+
+/* header-container에서 max-width를 제거하거나 100%로 설정 */
+.header-container {
+    width: 100%; /* 최대 너비를 100%로 설정 */
+    margin: 0 auto;
+    padding: 0 15px;
+    position: relative;
+}
+.logo {
+    color: white;
+    font-size: 1.5em
+}

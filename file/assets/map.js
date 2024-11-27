@@ -1,8 +1,13 @@
 import { meleeUnit, rangedUnit, eliteUnit } from "./UnitClass.js";
-import { mainBuilding, developmentBuilding, meleeUnitBuilding, rangedUnitBuilding, eliteUnitBuilding } from "./BuildingClass.js";
+import { mainBuilding, developmentBuilding, 
+         meleeUnitBuilding, rangedUnitBuilding, 
+         eliteUnitBuilding } from "./BuildingClass.js";
 import { User } from "./UserClass.js";
-import { createHexMap, drawChangedTiles, drawMap, highlightNearbyTiles } from "./CenterRelatedFunc.js";
-import { clearButton, switchcase_makeButton, clearStatus, makeDevelopmentButton, makeUnitButton } from "./BelowRelatedFunc.js";
+import { createHexMap, drawChangedTiles, 
+         drawMap, highlightNearbyTiles } from "./CenterRelatedFunc.js";
+import { clearButton, switchcase_makeButton, 
+         clearStatus, makeDevelopmentButton, 
+         makeUnitButton } from "./BelowRelatedFunc.js";
 import { animateProjectile, attackedMotion } from "./AnimationRelatedFunc.js";
 
 export const canvas = document.getElementById("hexMap");
@@ -15,6 +20,7 @@ const moveSpeedValue = document.getElementById("moveSpeedValue");
 
 let scaleChange = 1;
 
+/*
 //export let gameSettings.hexRadius = 50; // 육각형 타일의 반지름
 //export const gameSettings.rows = 45; // 행 수
 //export const gameSettings.cols = 45; // 열 수
@@ -59,14 +65,17 @@ let scaleChange = 1;
 //export let user1 = "user1";
 //export let test = "test";
 
+//export let selectedUnit = null; // 현재 선택된 유닛
+//let selectedBuilding = null; //현재 선택된 건물
+*/
+
 // 리스너용 전역 변수들
 let isDragging = false; // 마우스 드래그 여부
 let startX, startY; // 마우스 드래그 시작 위치 x,y
-let moveSpeed = 100; // 한 번에 이동할 거리 (픽셀 단위
+let moveSpeed = 50; // 한 번에 이동할 거리 (픽셀 단위)
 canvas.tabIndex = 1000;  // tabIndex를 설정하여 캔버스가 포커스를 받을 수 있게 합니다.
-//export let selectedUnit = null; // 현재 선택된 유닛
+
 let oldSelectedUnit = null; // 이전에 선택된 유닛
-//let selectedBuilding = null; //현재 선택된 건물
 
 // 게임 설정 객체
 export const gameSettings = {
@@ -424,12 +433,14 @@ canvas.addEventListener("click", (event) => {
                     document.getElementById("health-value").textContent = `체력: ${state.selectedBuilding.health}`;
                     document.getElementById("move").textContent = `대기 턴 수`;
                     if (state.selectedBuilding.pendingUnits.length > 0) {
+                        console.log(state.selectedBuilding.pendingUnits.length)
                         let penddingTurns = state.selectedBuilding.pendingUnits[0].startTurn + state.selectedBuilding.pendingUnits[0].delay - gameSettings.turn;
                         let pendingUnits = state.selectedBuilding.pendingUnits.length;
+                        console.log(`${penddingTurns} ${pendingUnits}`);
                         document.getElementById("move-value").innerHTML =
                             `${penddingTurns}턴 뒤 유닛 생산<br>${pendingUnits}개 대기중`;
                     }
-                    if (state.selectedBuilding.pendingDevelopment.length > 0) {
+                    else if (state.selectedBuilding.pendingDevelopment.length > 0) {
                         let penddingTurns = state.selectedBuilding.pendingDevelopment[0].startTurn + state.selectedBuilding.pendingDevelopment[0].delay - gameSettings.turn;
                         let pendingUnits = state.selectedBuilding.pendingDevelopment.length;
                         document.getElementById("move-value").innerHTML =
