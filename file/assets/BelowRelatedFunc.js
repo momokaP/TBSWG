@@ -55,7 +55,8 @@ export function clearButton() {
     if (Button4) { Button4.remove(); }
     const Button5 = document.getElementById("Button_5");
     if (Button5) { Button5.remove(); }
-}export function makeBuildButton(tile, number = 1, whatBuilding) {
+}
+export function makeBuildButton(tile, number = 1, whatBuilding) {
     if (!document.getElementById(`Button_${number}`)) {
         const functionValue_1 = document.getElementById(`button-${number}`);
         const Button_1 = document.createElement(`button-${number}`);
@@ -109,7 +110,7 @@ export function clearButton() {
     }
 
     function switchcase_buildButton() {
-        if (!tile.Building) {
+        if (!buildingMap[tile.row][tile.col]) {
             let building;
             switch (whatBuilding) {
                 case "mainBuilding":
@@ -133,11 +134,10 @@ export function clearButton() {
                     console.log(`알 수 없는 건물 유형: ${whatBuilding}`);
             }
             if (building) {
-                tile.placeBuilding(building);
+                buildingMap[tile.row][tile.col] = building;
                 user.insertBuilding(building);
                 user.resourceAmount -= canAffordBuilding(); // 자원 차감
             }
-            buildingMap[tile.row][tile.col] = tile.Building;
             createHexMap(gameSettings.rows, gameSettings.cols);
         }
     }
@@ -193,6 +193,9 @@ export function makeUnitButton(tile, number = 1, whatBuilding) {
         const {
             limitOfBuildUnit, limitOfMeleeUnit, limitOfRangedUnit, limitOfEliteUnit
         } = user.limitOfUnit();
+
+        console.log(user.pendingBuildUnits);
+        console.log(limitOfBuildUnit)
 
         switch (whatBuilding) {
             case "mainBuilding":
@@ -259,7 +262,7 @@ export function makeUnitButton(tile, number = 1, whatBuilding) {
 
 
         // 이전 유닛의 delay를 확인
-        const lastUnit = tile.Building.pendingUnits[tile.Building.pendingUnits.length - 1];
+        const lastUnit = buildingMap[tile.row][tile.col].pendingUnits[buildingMap[tile.row][tile.col].pendingUnits.length - 1];
         const previousDelay = lastUnit ? lastUnit.delay : 0;
 
         // 새 유닛의 delay는 이전 유닛의 delay + 기본 delay
@@ -272,10 +275,10 @@ export function makeUnitButton(tile, number = 1, whatBuilding) {
             tile: tile,
         };
 
-        tile.Building.pendingUnits.push(unitData); // 대기 중인 유닛을 사용자 목록에 추가
+        buildingMap[tile.row][tile.col].pendingUnits.push(unitData); // 대기 중인 유닛을 사용자 목록에 추가
         user.resourceAmount -= canAffordUnit(); // 자원 차감
 
-        const selectedBuilding = tile.Building;
+        const selectedBuilding = buildingMap[tile.row][tile.col];
         let penddingTurns = selectedBuilding.pendingUnits[0].startTurn + selectedBuilding.pendingUnits[0].delay - gameSettings.turn;
         let pendingUnits = selectedBuilding.pendingUnits.length;
         document.getElementById("move-value").innerHTML =
@@ -327,7 +330,7 @@ export function makeDevelopmentButton(tile, number = 1, whatDevelopment) {
         let isDevelopmentLimitExceeded = true;
         // 발전 건물의 발전 대기열 한계와, 대기 중인 발전을 비교하여
         // 대기 중인 발전이 발전 대기열의 한계라면 발전 대기열 추가 못하도록
-        isDevelopmentLimitExceeded = tile.Building.pendingDevelopment.length >= limits.development;
+        isDevelopmentLimitExceeded = buildingMap[tile.row][tile.col].pendingDevelopment.length >= limits.development;
 
         return isDevelopmentLimitExceeded;
     }
@@ -383,7 +386,7 @@ export function makeDevelopmentButton(tile, number = 1, whatDevelopment) {
 
 
         // 이전 발전의 delay를 확인
-        const lastDevelopment = tile.Building.pendingDevelopment[tile.Building.pendingDevelopment.length - 1];
+        const lastDevelopment = buildingMap[tile.row][tile.col].pendingDevelopment[buildingMap[tile.row][tile.col].pendingDevelopment.length - 1];
         const previousDelay = lastDevelopment ? lastDevelopment.delay : 0;
 
         // 새 발전의 delay는 이전 발전의 delay + 기본 delay
@@ -396,10 +399,10 @@ export function makeDevelopmentButton(tile, number = 1, whatDevelopment) {
             tile: tile,
         };
 
-        tile.Building.pendingDevelopment.push(DevelopmentData); // 대기 중인 발전을 목록에 추가
+        buildingMap[tile.row][tile.col].pendingDevelopment.push(DevelopmentData); // 대기 중인 발전을 목록에 추가
         user.resourceAmount -= canAffordDevelopment(); // 자원 차감
 
-        const selectedBuilding = tile.Building;
+        const selectedBuilding = buildingMap[tile.row][tile.col];
         let penddingTurns = selectedBuilding.pendingDevelopment[0].startTurn + selectedBuilding.pendingDevelopment[0].delay - gameSettings.turn;
         let pendingDevelopment = selectedBuilding.pendingDevelopment.length;
         document.getElementById("move-value").innerHTML =

@@ -88,7 +88,7 @@ class Building {
                 let unit;
 
                 // 타일에 유닛이 있으면 생산 지연
-                if (tile.unit) {
+                if (unitMap[tile.row][tile.col]) {
                     console.log(`타일 (${tile.row}, ${tile.col})에 유닛이 이미 있어 생산 지연`);
 
                     // 모든 유닛 생산 지연: 대기열에 있는 모든 유닛의 delay를 1턴 늘리기
@@ -117,9 +117,8 @@ class Building {
                         console.log(`알 수 없는 건물 유형: ${buildingType}`);
                 }
                 if (unit) {
-                    tile.placeUnit(unit);
+                    unitMap[tile.row][tile.col] = unit;
                     user.insertUnit(unit);
-                    unitMap[tile.unit.row][tile.unit.col] = tile.unit;
                     createHexMap(gameSettings.rows, gameSettings.cols);
                 }
                 return false; // 생산 완료된 유닛은 대기열에서 제거

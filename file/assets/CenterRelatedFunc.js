@@ -90,7 +90,7 @@ export function highlightNearbyTiles(unit, rows, cols, range = 1) {
         }
     }
 
-    drawChangedTiles();
+    drawChangedTiles(gameSettings.rows, gameSettings.cols);
 }
 // 육각형 맵 생성
 
@@ -125,6 +125,24 @@ export function createHexMap(rows, cols) {
             tile.color = "lightblue";
             tile.dirty = true;
 
+            tile.draw(ctx, gameSettings.mapOffset.x, gameSettings.mapOffset.y); // 타일 그리기
+
+            if (buildingMap[row] && buildingMap[row][col]) {
+                buildingMap[row][col].setRowCol(row, col);
+                buildingMap[row][col].setXY(x,y);
+                buildingMap[row][col].size = gameSettings.hexRadius;
+                
+                buildingMap[row][col].draw(ctx, gameSettings.mapOffset.x, gameSettings.mapOffset.y);
+            }
+
+            if (unitMap[row] && unitMap[row][col]) {
+                unitMap[row][col].setRowCol(row, col);
+                unitMap[row][col].setXY(x,y);
+                unitMap[row][col].size = gameSettings.hexRadius / 2;
+            
+                unitMap[row][col].draw(ctx, gameSettings.mapOffset.x, gameSettings.mapOffset.y);
+            }
+
             // 특정 타일에 유닛 배치 (예: (2,2) 위치에 유닛)
             if (gameSettings.initial === true &&
                 row === gameSettings.unitStartPosition.row && col === gameSettings.unitStartPosition.col) {
@@ -133,32 +151,18 @@ export function createHexMap(rows, cols) {
                 gameSettings.initial = false;
                 const unit = new buildUnit(gameSettings.hexRadius / 2); // 유닛 크기와 색상 설정
                 unitMap[row][col] = unit;
-                tile.placeUnit(unit); // 타일에 유닛 배치
                 user.insertUnit(unit);
 
                 // 테스트 용
-                const unit2 = new meleeUnit(gameSettings.hexRadius / 2, userInfo.test, "black", "테스트용 유닛이다", 1000, 50); // 유닛 크기와 색상 설정
+                const unit2 = new meleeUnit(gameSettings.hexRadius / 2, userInfo.test, "black", "근접 유닛", 1000, 50); // 유닛 크기와 색상 설정
                 unitMap[21][20] = unit2;
-                tile.placeUnit(unit2); // 타일에 유닛 배치
 
                 tile.draw(ctx, gameSettings.mapOffset.x, gameSettings.mapOffset.y); // 타일 그리기
             }
-
-            if (buildingMap[row] && buildingMap[row][col]) {
-                tile.placeBuilding(buildingMap[row][col]); // 타일에 건물 배치
-                buildingMap[row][col].size = gameSettings.hexRadius;
-            }
-
-            if (unitMap[row] && unitMap[row][col]) {
-                tile.placeUnit(unitMap[row][col]); // 타일에 유닛 배치
-                unitMap[row][col].size = gameSettings.hexRadius / 2;
-                //console.log(`i'm createHexMap, ${unitMap[row][col].row}, ${unitMap[row][col].col}, ${unitMap[row][col].size}`)
-            }
-            tile.draw(ctx, gameSettings.mapOffset.x, gameSettings.mapOffset.y); // 타일 그리기
         }
     }
     markRedTiles();
-    drawChangedTiles();
+    drawChangedTiles(gameSettings.rows, gameSettings.cols);
     showstatus(ctx);
 }
 // 특정 좌표에 있는 타일들을 빨간색으로 설정
@@ -176,36 +180,55 @@ function markRedTiles() {
             hexMap[row][col].dirty = true;
             hexMap[row][col].resource = true;
             if (hexMap[row][col].resourceAmount === null) {
-                //console.log("처음자원");
                 hexMap[row][col].resourceAmount = 1000;
             }
         }
     });
 
 }
+
 // 맵을 그리는 함수
-export function drawMap() {
+export function drawMap(rows, cols) {
     ctx.clearRect(0, 0, canvas.width, canvas.height); // 캔버스를 지운 후
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            const tile = hexMap[row][col];
+            const unit = unitMap[row][col];
+            const building = buildingMap[row][col];
 
-
-    // 타일을 그릴 때 이동된 위치를 반영
-    hexMap.forEach(row => {
-        row.forEach(hex => {
-            hex.dirty = true;
-            hex.draw(ctx, gameSettings.mapOffset.x, gameSettings.mapOffset.y);
-        });
-    });
+            tile.dirty = true;
+            tile.draw(ctx, gameSettings.mapOffset.x, gameSettings.mapOffset.y);
+            if(building) building.draw(ctx, gameSettings.mapOffset.x, gameSettings.mapOffset.y);
+            if(unit) unit.draw(ctx, gameSettings.mapOffset.x, gameSettings.mapOffset.y);
+        }
+    }
     showstatus(ctx);
 }
+
 // 맵을 지우지 않고 변경되 타일만 다시 그리는 함수
+export function drawChangedTiles(rows, cols) {
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            const tile = hexMap[row][col];
+            const unit = unitMap[row][col];
+            const building = buildingMap[row][col];
 
+            tile.draw(ctx, gameSettings.mapOffset.x, gameSettings.mapOffset.y);
+            if(building) building.draw(ctx, gameSettings.mapOffset.x, gameSettings.mapOffset.y);
+            if(unit) unit.draw(ctx, gameSettings.mapOffset.x, gameSettings.mapOffset.y);
+        }
+    }
+    showstatus(ctx);
+}
 
-export function drawChangedTiles() {
-    hexMap.forEach(row => {
-        row.forEach(hex => {
-            hex.draw(ctx, gameSettings.mapOffset.x, gameSettings.mapOffset.y);
-        });
-    });
+export function drawEmptyTiles(rows, cols) {
+    for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+            const tile = hexMap[row][col];
+            tile.dirty=true;
+            tile.draw(ctx, gameSettings.mapOffset.x, gameSettings.mapOffset.y);
+        }
+    }
     showstatus(ctx);
 }
 

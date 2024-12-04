@@ -1,14 +1,23 @@
-import { meleeUnit, rangedUnit, eliteUnit } from "./UnitClass.js";
+import { buildUnit, meleeUnit, rangedUnit, eliteUnit } from "./UnitClass.js";
 import { mainBuilding, developmentBuilding, 
          meleeUnitBuilding, rangedUnitBuilding, 
          eliteUnitBuilding } from "./BuildingClass.js";
 import { User } from "./UserClass.js";
 import { createHexMap, drawChangedTiles, 
-         drawMap, highlightNearbyTiles } from "./CenterRelatedFunc.js";
+         drawMap, highlightNearbyTiles, 
+         drawEmptyTiles } from "./CenterRelatedFunc.js";
 import { clearButton, switchcase_makeButton, 
          clearStatus, makeDevelopmentButton, 
          makeUnitButton } from "./BelowRelatedFunc.js";
 import { animateProjectile, attackedMotion } from "./AnimationRelatedFunc.js";
+import { saveHexMapToServer, 
+         fetchHexMapFromServer, 
+         saveUnitMapToServer,
+         fetchUnitMapFromServer,
+         saveBuildingMapToServer,
+         fetchBuildingMapFromServer,
+         saveGameUserToServer,
+         fetchGameUserFromServer } from "./mongodbHandler.js";
 
 export const canvas = document.getElementById("hexMap");
 export const ctx = canvas.getContext("2d");
@@ -19,55 +28,6 @@ const tileSizeValue = document.getElementById("tileSizeValue");
 const moveSpeedValue = document.getElementById("moveSpeedValue");
 
 let scaleChange = 1;
-
-/*
-//export let gameSettings.hexRadius = 50; // 육각형 타일의 반지름
-//export const gameSettings.rows = 45; // 행 수
-//export const gameSettings.cols = 45; // 열 수
-//export let gameSettings.turn = 1;
-
-//export let gameSettings.mapOffset.x = 0; // 맵의 이동을 위한 변수
-//export let gameSettings.mapOffset.y = 0; // 맵의 이동을 위한 변수
-//export let gameSettings.initial = true;
-//export let gameSettings.unitStartPosition.row = 22; // 유닛 초기 행 위치
-//export let gameSettings.unitStartPosition.col = 22; // 유닛 초기 열 위치
-
-//export let prices.units.buildUnit = 10;
-//export let prices.units.meleeUnit = 20;
-//export let priceOfrangedUnit = 30;
-//export let priceOfeliteUnit = 40;
-
-//export let priceOfmainBuilding = 100;
-//export let priceOfdevelopmentBuilding = 150;
-//export let priceOfmeleeUnitBuilding = 200;
-//export let priceOfrangedUnitBuilding = 300;
-//export let priceOfeliteUnitBuilding = 400;
-
-//export let priceOfMainBuildingImprovement = 100;
-//export let priceOfDevelopmentImprovement = 100;
-//export let priceOfProductionImprovement = 100;
-//export let priceOfmeleeUnitImprovement = 100;
-//export let priceOfrangedUnitImprovement = 100;
-//export let priceOfeliteUnitImprovement = 100;
-
-//export let initialBuildUnitLimit = 1;
-//export let buildUnitLimit = 3;
-//export let meleeUnitLimit = 3;
-//export let rangedUnitLimit = 3;
-//export let eliteUnitLimit = 3;
-//export let developmentLimit = 3;
-
-//export let buildUnitMove = 2;
-//export let meleeUnitMove = 2;
-//export let rangedUnitMove = 2;
-//export let eliteUnitMove = 4;
-
-//export let user1 = "user1";
-//export let test = "test";
-
-//export let selectedUnit = null; // 현재 선택된 유닛
-//let selectedBuilding = null; //현재 선택된 건물
-*/
 
 // 리스너용 전역 변수들
 let isDragging = false; // 마우스 드래그 여부
@@ -180,7 +140,7 @@ canvas.addEventListener("mousemove", (event) => {
         });
     });
 
-    requestAnimationFrame(() => drawChangedTiles()); // 변경된 타일만 다시 그리기
+    requestAnimationFrame(() => drawChangedTiles(gameSettings.rows, gameSettings.cols)); // 변경된 타일만 다시 그리기
 
     if (isDragging) {
         // 드래그 중일 때 마우스 이동 거리를 계산하여 mapOffsetX, mapOffsetY 변경
@@ -196,7 +156,7 @@ canvas.addEventListener("mousemove", (event) => {
 
         //ctx.clearRect(0, 0, canvas.width, canvas.height);
         // 화면을 다시 그리기
-        requestAnimationFrame(drawMap); //createHexMap(rows, cols)
+        requestAnimationFrame(() => drawMap(gameSettings.rows, gameSettings.cols)); //createHexMap(rows, cols)
     }
 });
 
@@ -228,9 +188,9 @@ canvas.addEventListener("click", (event) => {
         row.forEach(tile => {
             tile.updateClick(mouseX, mouseY, gameSettings.mapOffset.x, gameSettings.mapOffset.y);
             try {
-                if (tile.unit && tile.unit.isClicked(mouseX, mouseY, gameSettings.mapOffset.x, gameSettings.mapOffset.y)) {
+                if (unitMap[tile.row][tile.col] && unitMap[tile.row][tile.col].isClicked(mouseX, mouseY, gameSettings.mapOffset.x, gameSettings.mapOffset.y)) {
                     // 유닛을 클릭했을 때
-                    state.selectedUnit = tile.unit;
+                    state.selectedUnit = unitMap[tile.row][tile.col];
                     unitClicked = true;
 
                     // 유닛의 정보를 <div class="status">에 표시
@@ -295,34 +255,14 @@ canvas.addEventListener("click", (event) => {
                         createHexMap(gameSettings.rows, gameSettings.cols);
                     }
                     if (state.selectedUnit.health > 0 && !unitAttacked) {
-                        //if(selectedUnit instanceof eliteUnit){
-                        //    highlightNearbyTiles(selectedUnit, rows, cols, 2); // 근처 타일 색상 변경
-                        //}
-                        //else{
                         highlightNearbyTiles(state.selectedUnit, gameSettings.rows, gameSettings.cols); // 근처 타일 색상 변경
-                        //}
                     }
 
                     oldSelectedUnit = state.selectedUnit;
                 }
             }
             catch (err) {
-                console.error(err);
-                console.log(`is:${tile.unit}, x:${tile.unit.row}, y:${tile.unit.col}`);
-                unitMap.forEach(row => {
-                    row.forEach(unit => {
-                        if (unit) {
-                            console.log(`unit O, x:${unit.row}, y:${unit.col}`);
-                        }
-                    });
-                });
-                hexMap.forEach(row => {
-                    row.forEach(tile => {
-                        if (tile.unit) {
-                            console.log(`tile 0, x:${tile.unit.row}, y:${tile.unit.col}`);
-                        }
-                    });
-                });
+                console.log("cilck error");
             }
         });
     });
@@ -332,9 +272,9 @@ canvas.addEventListener("click", (event) => {
             row.forEach(tile => {
                 if (tile.isClicked === true) {
                     // 하이라이트 된, 유닛이 없는 타일을 클릭하면 유닛은 이동한다
-                    if ((tile.color === "yellow" || tile.color === "gold") && tile.unit === null) {
-                        if (tile.Building && oldSelectedUnit
-                            && tile.Building.user !== oldSelectedUnit.user) {
+                    if ((tile.color === "yellow" || tile.color === "gold") && !unitMap[tile.row][tile.col]) {
+                        if (buildingMap[tile.row][tile.col] && oldSelectedUnit
+                            && buildingMap[tile.row][tile.col].user !== oldSelectedUnit.user) {
                             if (oldSelectedUnit && oldSelectedUnit.move > 0) {
                                 if (oldSelectedUnit instanceof meleeUnit || oldSelectedUnit instanceof rangedUnit || oldSelectedUnit instanceof eliteUnit) {
                                     console.log(`건물피격 판정`);
@@ -344,35 +284,35 @@ canvas.addEventListener("click", (event) => {
                                     const dx = 0;
                                     const dy = 0;
 
-                                    tile.Building.health = tile.Building.health - oldSelectedUnit.damage;
+                                    buildingMap[tile.row][tile.col].health = buildingMap[tile.row][tile.col].health - oldSelectedUnit.damage;
 
                                     if (oldSelectedUnit instanceof rangedUnit) {
                                         console.log(`원거리!`);
                                         // 원거리 유닛 공격 로직
                                         const fromX = oldSelectedUnit.x + gameSettings.mapOffset.x;
                                         const fromY = oldSelectedUnit.y + gameSettings.mapOffset.y;
-                                        const toX = tile.Building.x + gameSettings.mapOffset.x;
-                                        const toY = tile.Building.y + gameSettings.mapOffset.y;
+                                        const toX = buildingMap[tile.row][tile.col].x + gameSettings.mapOffset.x;
+                                        const toY = buildingMap[tile.row][tile.col].y + gameSettings.mapOffset.y;
 
                                         animateProjectile(fromX, fromY, toX, toY, () => {
                                             // 투사체 도착 후 공격 처리
                                             console.log(`ranged attack!`);
-                                            attackedMotion(dx, dy), tile.Building;
+                                            attackedMotion(dx, dy), buildingMap[tile.row][tile.col];
                                         });
                                     }
                                     else {
-                                        attackedMotion(dx, dy, tile.Building);
+                                        attackedMotion(dx, dy, buildingMap[tile.row][tile.col]);
                                     }
-                                    document.getElementById("health-value").textContent = `체력: ${tile.Building.health}`;
+                                    document.getElementById("health-value").textContent = `체력: ${buildingMap[tile.row][tile.col].health}`;
                                 }
                             }
 
-                            if (tile.Building.health <= 0) {
-                                user.deleteBuilding(buildingMap[tile.Building.row][tile.Building.col]);
+                            if (buildingMap[tile.row][tile.col].health <= 0) {
+                                user.deleteBuilding(buildingMap[buildingMap[tile.row][tile.col].row][buildingMap[tile.row][tile.col].col]);
                                 // 이전에 클릭한 건물의 체력이 0이하가 되면 건물 제거
-                                buildingMap[tile.Building.row][tile.Building.col] = null;
+                                buildingMap[tile.row][tile.col] = null;
                                 // 해당 타일의 건물 제거
-                                hexMap[tile.Building.row][tile.Building.col].deleteBuilding();
+                                //hexMap[tile.row][tile.col].deleteBuilding();
 
                                 clearStatus();
                                 clearButton();
@@ -384,12 +324,9 @@ canvas.addEventListener("click", (event) => {
                                 document.getElementById("move-value").textContent = `${state.selectedUnit.move}`;
                                 // 유닛을 다른 타일로 이동 시키기 위해 unitMap에서 이전의 유닛 제거
                                 unitMap[state.selectedUnit.row][state.selectedUnit.col] = null;
-                                // 유닛을 다른 타일로 이동 시키기 위해 hexMap에서 이전 타일을 고르고, 그 타일의 유닛 제거
-                                hexMap[state.selectedUnit.row][state.selectedUnit.col].deleteUnit();
 
                                 // 노란색으로 하이라이트 된 타일을 클릭하면 유닛을 해당 타일로 이동
-                                tile.placeUnit(state.selectedUnit);
-                                unitMap[tile.unit.row][tile.unit.col] = tile.unit;
+                                unitMap[tile.row][tile.col] = state.selectedUnit;
                                 unitMoved = true;
 
                                 clearButton();
@@ -422,9 +359,9 @@ canvas.addEventListener("click", (event) => {
                         }
                     }
                 }
-                if (tile.Building && !unitMoved && tile.Building.isBuildingClicked(mouseX, mouseY, gameSettings.mapOffset.x, gameSettings.mapOffset.y)) {
+                if (buildingMap[tile.row][tile.col] && !unitMoved && buildingMap[tile.row][tile.col].isBuildingClicked(mouseX, mouseY, gameSettings.mapOffset.x, gameSettings.mapOffset.y)) {
                     // 건물을 클릭했을 때
-                    state.selectedBuilding = tile.Building;
+                    state.selectedBuilding = buildingMap[tile.row][tile.col];
                     BuildingClicked = true;
 
                     // 건물의 정보를 <div class="status">에 표시
@@ -433,7 +370,8 @@ canvas.addEventListener("click", (event) => {
                     document.getElementById("health-value").textContent = `체력: ${state.selectedBuilding.health}`;
                     document.getElementById("move").textContent = `대기 턴 수`;
                     if (state.selectedBuilding.pendingUnits.length > 0) {
-                        console.log(state.selectedBuilding.pendingUnits.length)
+                        console.log("건물"+state.selectedBuilding.pendingUnits[0]);
+                        console.log(state.selectedBuilding.pendingUnits.length);
                         let penddingTurns = state.selectedBuilding.pendingUnits[0].startTurn + state.selectedBuilding.pendingUnits[0].delay - gameSettings.turn;
                         let pendingUnits = state.selectedBuilding.pendingUnits.length;
                         console.log(`${penddingTurns} ${pendingUnits}`);
@@ -518,7 +456,7 @@ canvas.addEventListener('keydown', (event) => {
                 gameSettings.mapOffset.x -= moveSpeed;  // 오른쪽으로 이동
                 break;
         }
-        requestAnimationFrame(drawMap);
+        requestAnimationFrame(() => drawMap(gameSettings.rows, gameSettings.cols));
     }
 });
 
@@ -604,13 +542,340 @@ function nextTurn() {
         user.gatheredResources();
         user.processPending();
 
+        const formattedHexMap = hexMap.map((row, rowIndex) =>
+            row
+                .map((tile, colIndex) => {
+                    // resource가 true일 때만 객체를 생성
+                    if (tile.resource) {
+                        return {
+                            row: rowIndex,
+                            col: colIndex,
+                            resource: tile.resource,
+                            resourceAmount: tile.resourceAmount,
+                        };
+                    }
+                    return null; // resource가 없으면 null 반환
+                })
+                .filter(tile => tile !== null) // null 값 제거
+        );
+
+        const formattedUnitMap = unitMap.map((row, rowIndex) =>
+            row
+                .map((unit, colIndex) => {
+                    // resource가 true일 때만 객체를 생성
+                    if (unit) {
+                        return {
+                            name: unit.name,
+                            row: rowIndex,
+                            col: colIndex,
+                            health: unit.health,
+                            damage: unit.damage,
+                            move: unit.move,
+                            user: unit.user,
+                            color: unit.color,
+                        };
+                    }
+                    return null; // resource가 없으면 null 반환
+                })
+                .filter(unit => unit !== null) // null 값 제거
+        );
+
+        const formattedBuildingMap = buildingMap.map((row, rowIndex) =>
+            row
+                .map((building, colIndex) => {
+                    // resource가 true일 때만 객체를 생성
+                    if (building) {
+                        return {
+                            name: building.name,
+                            row: rowIndex,
+                            col: colIndex,
+                            health: building.health,
+                            user: building.user,
+                            // pendingUnits가 배열이고 모든 요소가 유효한 경우만 저장
+                            pendingUnits: Array.isArray(building.pendingUnits)
+                            ? building.pendingUnits
+                                .filter(unit => unit.startTurn !== undefined &&
+                                                unit.delay !== undefined &&
+                                                unit.buildingType !== undefined &&
+                                                unit.tile !== undefined)
+                                .map(unit => ({
+                                    startTurn: unit.startTurn,
+                                    delay: unit.delay,
+                                    buildingType: unit.buildingType,
+                                    tile: unit.tile,
+                                }))
+                            : [],
+                            // pendingDevelopment가 배열이고 모든 요소가 유효한 경우만 저장
+                            pendingDevelopment: Array.isArray(building.pendingDevelopment)
+                            ? building.pendingDevelopment
+                                .filter(dev => dev.startTurn !== undefined &&
+                                                dev.delay !== undefined &&
+                                                dev.developmentType !== undefined &&
+                                                dev.tile !== undefined)
+                                .map(dev => ({
+                                    startTurn: dev.startTurn,
+                                    delay: dev.delay,
+                                    developmentType: dev.developmentType,
+                                    tile: dev.tile,
+                                }))
+                            : [],
+                            gatherResources: building.gatherResources,
+                        };
+                    }
+                    return null; // resource가 없으면 null 반환
+                })
+                .filter(building => building !== null) // null 값 제거
+        );
+
+        //console.log(formattedHexMap);
+        //console.log(formattedUnitMap);
+        //console.log(formattedBuildingMap);
+
+        saveHexMapToServer(formattedHexMap);
+        saveUnitMapToServer(formattedUnitMap);
+        saveBuildingMapToServer(formattedBuildingMap);
+        saveGameUserToServer(user);
+
+        renderHexMap();
+        renderUnitMap();
+        renderBuildingMap();
+        renderGameUser();
+        userStatusUpdate();
+
         createHexMap(gameSettings.rows, gameSettings.cols);
         clearStatus();
         clearButton();
     });
+    
 }
-nextTurn();
 
+document.addEventListener("DOMContentLoaded", async () => {
+    // 새로고침 하면 서버에서 데이터 가져와 렌더링
+    await renderHexMap(); 
+    await renderUnitMap();
+    await renderBuildingMap();
+    await renderGameUser();
+    userStatusUpdate();
+
+    createHexMap(gameSettings.rows, gameSettings.cols); // 45행, 45열의 육각형 맵
+});
+
+function userStatusUpdate(){
+    user.reset();
+    for(let row=0; row<gameSettings.rows; row++){
+        for(let col=0; col<gameSettings.cols; col++){
+            if (buildingMap[row] && buildingMap[row][col]){
+                if(buildingMap[row][col].user===user.name){
+                    user.insertBuilding(buildingMap[row][col]);
+
+                    switch (true) {
+                        case buildingMap[row][col] instanceof mainBuilding:
+                            user.pendingBuildUnits+=buildingMap[row][col].pendingUnits.length;
+                            break;
+                        case buildingMap[row][col] instanceof meleeUnitBuilding:
+                            user.pendingMeleeUnits+=buildingMap[row][col].pendingUnits.length;
+                            break;
+                        case buildingMap[row][col] instanceof rangedUnitBuilding:
+                            user.pendingRangedUnits+=buildingMap[row][col].pendingUnits.length;
+                            break;
+                        case buildingMap[row][col] instanceof eliteUnitBuilding:
+                            user.pendingEliteUnits+=buildingMap[row][col].pendingUnits.length;
+                            break;
+                        default:
+                            console.log(`pass`);
+                    }
+                }
+            }
+            if (unitMap[row] && unitMap[row][col]){
+                if(unitMap[row][col].user===user.name){
+                    user.insertUnit(unitMap[row][col]);
+                }
+
+            }
+        }
+    }
+}
+
+async function renderGameUser(){
+    const gameUser = await fetchGameUserFromServer();
+    if (gameUser.length === 0) return;
+
+    gameUser.forEach((gameuser) => {
+        user.resourceAmount = gameuser.resourceAmount;
+        gameSettings.turn = gameuser.turn;
+        document.getElementById("turn").textContent = `턴: ${gameSettings.turn}`;
+    });
+}
+
+// Hex Map 데이터를 가져와 렌더링하는 함수
+async function renderHexMap() {
+    const hexMapData = await fetchHexMapFromServer();
+    if (hexMapData.length === 0) return; // 데이터가 없으면 중단
+
+    // 가져온 데이터를 기반으로 Hex Map을 렌더링
+    hexMapData.forEach((tile) => {
+        hexMap[tile.row][tile.col].resourceAmount=tile.resourceAmount;
+    });
+}
+
+// Unit Map 데이터를 가져와 렌더링하는 함수
+async function renderUnitMap() {
+    const unitMapData = await fetchUnitMapFromServer();
+    if (unitMapData.length === 0) {
+        return; // 데이터가 없으면 중단
+    }
+    else {
+        gameSettings.initial = false;
+        
+        // 가져온 데이터를 기반으로 Hex Map을 렌더링
+        unitMapData.forEach((unit) => {
+            if(!unitMap[unit.row][unit.col]){
+                let makeUnit;
+                switch (unit.name) {
+                    case "건설 유닛":
+                        makeUnit = new buildUnit(gameSettings.hexRadius / 2);
+                        break;
+                    case "근접 유닛":
+                        makeUnit = new meleeUnit(gameSettings.hexRadius / 2);
+                        break;
+                    case "원거리 유닛":
+                        makeUnit = new rangedUnit(gameSettings.hexRadius / 2);
+                        break;
+                    case "엘리트 유닛":
+                        makeUnit = new eliteUnit(gameSettings.hexRadius / 2);
+                        break;
+                    default:
+                        console.log(`알 수 없는 유닛 유형: ${unit.name}`);
+                        return false;
+                }
+                unitMap[unit.row][unit.col] = makeUnit;
+            }
+
+            unitMap[unit.row][unit.col].row=unit.row;
+            unitMap[unit.row][unit.col].col=unit.col;
+            unitMap[unit.row][unit.col].health=unit.health;
+            unitMap[unit.row][unit.col].move=unit.move;
+            unitMap[unit.row][unit.col].user=unit.user;
+            unitMap[unit.row][unit.col].color=unit.color;
+
+            if(unit.damage){
+                unitMap[unit.row][unit.col].damage=unit.damage;
+            }
+        });
+
+        // Set을 사용해 새롭게 불러온 유닛 좌표를 저장
+        const currentUnitsSet = new Set(
+            unitMapData.map((unit) => `${unit.row},${unit.col}`)
+        );
+
+        // 기존 unitMap에서 매칭되지 않는 유닛을 확인
+        for (let row = 0; row < unitMap.length; row++) {
+            for (let col = 0; col < unitMap[row].length; col++) {
+                if (
+                    !gameSettings.initial &&
+                    unitMap[row][col] && // 유닛이 존재하고
+                    !currentUnitsSet.has(`${row},${col}`) // 새 데이터에 포함되지 않음
+                ) {
+                    console.log(`유닛 제거: ${row}, ${col}`);
+                    unitMap[row][col] = null; // 매칭되지 않는 유닛 제거
+                }
+            }
+        }
+    }
+}
+
+// Building Map 데이터를 가져와 렌더링하는 함수
+async function renderBuildingMap() {
+    const buildingMapData = await fetchBuildingMapFromServer();
+    if (!buildingMapData.length === 0) {
+        return; // 데이터가 없으면 중단
+    }
+    else {
+        gameSettings.initial = false;
+
+        // 가져온 데이터를 기반으로 Building Map을 렌더링
+        buildingMapData.forEach((building) => {
+            if(!buildingMap[building.row][building.col]){
+                let makeBuilding;
+                switch (building.name) {
+                    case "메인 건물":
+                        makeBuilding = new mainBuilding(gameSettings.hexRadius);
+                        break;
+                    case "발전 건물":
+                        makeBuilding = new developmentBuilding(gameSettings.hexRadius);
+                        break;
+                    case "근거리 유닛 생산 건물":
+                        makeBuilding = new meleeUnitBuilding(gameSettings.hexRadius);
+                        break;
+                    case "원거리 유닛 생산 건물":
+                        makeBuilding = new rangedUnitBuilding(gameSettings.hexRadius);
+                        break;
+                    case "엘리트 유닛 생산 건물":
+                        makeBuilding = new eliteUnitBuilding(gameSettings.hexRadius);
+                        break;
+                    default:
+                        console.log(`알 수 없는 건물 유형: ${building.name}`);
+                        return false;
+                }
+                buildingMap[building.row][building.col] = makeBuilding;
+            }
+
+            buildingMap[building.row][building.col].row=building.row;
+            buildingMap[building.row][building.col].col=building.col;
+            buildingMap[building.row][building.col].health=building.health;
+            buildingMap[building.row][building.col].user=building.user;
+
+            if(building.pendingUnits.length>0){
+                building.pendingUnits.forEach(unit=>{
+                    const unitData = {
+                        startTurn: unit.startTurn,
+                        delay: unit.delay,
+                        buildingType: unit.buildingType,
+                        tile: unit.tile,
+                    };
+                    buildingMap[building.row][building.col].pendingUnits.push(unitData);
+                    //console.log(`Pending Unit: Type: ${unit.buildingType}, Start Turn: ${unit.startTurn}`);
+                })
+                //buildingMap[building.row][building.col].pendingUnits.push(building.pendingUnits);
+                console.log("render:"+buildingMap[building.row][building.col].pendingUnits);
+            }
+
+            if(building.pendingDevelopment.length>0){
+                building.pendingDevelopment.forEach(dev=>{
+                    //console.log(`Pending Dev: Type: ${dev.buildingType}, Start Turn: ${dev.startTurn}`);
+                })
+                //buildingMap[building.row][building.col].pendingDevelopment.push(building.pendingDevelopment);
+            }
+
+            if(building.gatherResources){
+                buildingMap[building.row][building.col].gatherResources=building.gatherResources;
+            }
+        });
+
+        // Set을 사용해 새롭게 불러온 건물 좌표를 저장
+        const currentBuildingsSet = new Set(
+            buildingMapData.map((building) => `${building.row},${building.col}`)
+        );
+
+        // 기존 buildingMap에서 매칭되지 않는 건물을 확인
+        for (let row = 0; row < buildingMap.length; row++) {
+            for (let col = 0; col < buildingMap[row].length; col++) {
+                if (
+                    !gameSettings.initial &&
+                    buildingMap[row][col] && // 건물이 존재하고
+                    !currentBuildingsSet.has(`${row},${col}`) // 새 데이터에 포함되지 않음
+                ) {
+                    console.log(`건물 제거: ${row}, ${col}`);
+                    buildingMap[row][col] = null; // 매칭되지 않는 건물 제거
+                }
+            }
+        }
+    }
+}
+
+gameSettings.initial=true;
+nextTurn();
 // 맵 생성 함수 호출
 createHexMap(gameSettings.rows, gameSettings.cols); // 45행, 45열의 육각형 맵
-createHexMap(gameSettings.rows, gameSettings.cols); // 45행, 45열의 육각형 맵
+ctx.clearRect(0, 0, canvas.width, canvas.height); // 캔버스를 지운 후
+

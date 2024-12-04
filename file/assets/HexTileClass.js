@@ -15,8 +15,6 @@ export class HexTile {
         this.isClicked = false; // 클릭 상태 저장
         this.dirty = true; // 타일의 상태가 변경되었을 때만 true로 설정
         this.resource = false; // 자원 타일 여부
-        this.unit = null; // 유닛 객체
-        this.Building = null; //건물 객체
         this.row = null;
         this.col = null;
         this.resourceAmount = null; // 자원 양
@@ -33,29 +31,6 @@ export class HexTile {
     // 색상 설정
     setColor(color) {
         this.color = color;
-    }
-
-    // 유닛 배치
-    placeUnit(unit) {
-        this.unit = unit; // 유닛 객체 저장
-        this.dirty = true; // 유닛이 타일에 배치되었으므로 해당 타일을 다시 그려야 함
-        this.unit.setRowCol(this.row, this.col);
-        this.unit.setXY(this.x, this.y);
-    }
-
-    deleteUnit() {
-        this.unit = null;
-    }
-
-    placeBuilding(Building) {
-        this.Building = Building; // 건물 객체 저장
-        this.dirty = true; // 건물이 타일에 배치되었으므로 해당 타일을 다시 그려야 함
-        this.Building.setRowCol(this.row, this.col);
-        this.Building.setXY(this.x, this.y);
-    }
-
-    deleteBuilding() {
-        this.Building = null;
     }
 
     // 육각형 그리기
@@ -81,16 +56,6 @@ export class HexTile {
 
         // 타일을 그린 후 dirty 상태를 false로 리셋
         this.dirty = false;
-
-        // 건물 그리기 (타일 위에 건물이 있을 경우)
-        if (this.Building) {
-            this.Building.draw(ctx, offsetX, offsetY);
-        }
-
-        // 유닛 그리기 (타일 위에 유닛이 있을 경우)
-        if (this.unit) {
-            this.unit.draw(ctx, offsetX, offsetY);
-        }
     }
 
     // 색상 반전 함수
@@ -148,10 +113,5 @@ export class HexTile {
         if (this.isClicked !== wasClicked) {
             this.dirty = true;
         }
-    }
-
-    // 타일 클릭 시 유닛 이동
-    moveUnit(unit) {
-        this.placeUnit(unit);
     }
 }

@@ -10,11 +10,25 @@ import { mainBuilding, developmentBuilding, meleeUnitBuilding, rangedUnitBuildin
 export class User {
     constructor(name) {
         this.name = name;
+
         this.unit = [];
         this.numberOfUnit = 0;
         this.building = [];
         this.numberOfBuilding = 0;
+
+        this.pendingBuildUnits = 0;
+        this.pendingMeleeUnits = 0;
+        this.pendingRangedUnits = 0;
+        this.pendingEliteUnits = 0;
+
         this.resourceAmount = 100;
+    }
+    reset(){
+        this.unit = [];
+        this.numberOfUnit = 0;
+        this.building = [];
+        this.numberOfBuilding = 0;
+        
         this.pendingBuildUnits = 0;
         this.pendingMeleeUnits = 0;
         this.pendingRangedUnits = 0;

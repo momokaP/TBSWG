@@ -19,6 +19,7 @@ app.use(express.urlencoded({extended: true}));
 
 app.use("/", require("./routes/main_loginRoutes"));
 app.use("/game", require("./routes/gameRoutes"));
+app.use("/data", require("./routes/dataRoutes"));
 
 app.get("/error", (req, res)=>{
 	res.render("error");
