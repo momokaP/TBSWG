@@ -15,53 +15,87 @@
         </div>
     </header>
 
-    <main>
-        <div class="controls">
-            <div class="slider-item">
-                <label for="tileSizeSlider">타일 크기: <span id="tileSizeValue">50</span></label>
-                <input type="range" id="tileSizeSlider" min="10" max="100" value="50">
-            </div>
+    <below>
+        <left>
+            <div class="sidebar">
+                <h2>사이드바</h2>
+                <!-- 사이드바 내용 추가 -->
+                <ul>
+                    <li>메뉴 1</li>
+                    <li>메뉴 2</li>
+                    <li>메뉴 3</li>
+                </ul>
 
-            <div class="slider-item empty"></div>
-            
-            <div class="slider-item">
-                <label for="moveSpeedSlider">맵 이동 속도 (키보드): <span id="moveSpeedValue">50</span></label>
-                <input type="range" id="moveSpeedSlider" min="1" max="100" value="50">
+                <button class="end-game-btn" id="end-game-btn">게임 종료</button>
             </div>
-        </div>
+        </left>
+
+        <right>
+            <main>
+                <div class="controls">
+                    <div class="slider-item">
+                        <label for="tileSizeSlider">타일 크기: <span id="tileSizeValue">50</span></label>
+                        <input type="range" id="tileSizeSlider" min="10" max="100" value="50">
+                    </div>
+
+                    <div class="slider-item empty"></div>
+                    
+                    <div class="slider-item">
+                        <label for="moveSpeedSlider">맵 이동 속도 (키보드): <span id="moveSpeedValue">50</span></label>
+                        <input type="range" id="moveSpeedSlider" min="1" max="100" value="50">
+                    </div>
+                </div>
+                
+                <canvas id="hexMap" width="1000" height="350"></canvas>
+                
+                <div class="turn-container">
+                    <div id="turn">턴</div>
+                    <button id="nextTurnButton">턴 넘기기</button>
+                </div>
+
+                <footer>
+                    <div class="status">
+                        <div id="name">이름</div>
+                        <div id="health">체력</div>
+                        <div id="move">이동력</div>
+                        <div id="function">기능</div>
+                        
+                        <div id="name-value"></div> 
+                        <div id="owner-value"></div> 
+                        <div id="health-value" class="merged-cell"></div>
+                        <div id="move-value" class="merged-cell"></div>
+                        <div id="function-value"></div>
         
-        <canvas id="hexMap" width="1000" height="400"></canvas>
+                        <div class="button-row">
+                            <div id="button-1"></div>
+                            <div id="button-2"></div>
+                            <div id="button-3"></div>
+                            <div id="button-4"></div>
+                            <div id="button-5"></div>
+                        </div>
+                    </div>
+                </footer>
+            </main>
+        </right>
         
-        <div class="turn-container">
-            <div id="turn">턴</div>
-            <button id="nextTurnButton">턴 넘기기</button>
-        </div>
-    </main>
+    </below>
     
-    <footer>
-        <div class="status">
-            <div id="name">이름</div>
-            <div id="health">체력</div>
-            <div id="move">이동력</div>
-            <div id="function">기능</div>
-            
-            <div id="name-value"></div> 
-            <div id="owner-value"></div> 
-            <div id="health-value" class="merged-cell"></div>
-            <div id="move-value" class="merged-cell"></div>
-            <div id="function-value"></div>
-
-            <div class="button-row">
-                <div id="button-1"></div>
-                <div id="button-2"></div>
-                <div id="button-3"></div>
-                <div id="button-4"></div>
-                <div id="button-5"></div>
-            </div>
-        </div>
-    </footer>
-
     <script type="module" src="map.js"></script>
+
+    <script>
+        window.onload = () => {
+            const sidebar = document.querySelector('.sidebar');
+            const bodyHeight = document.body.clientHeight; // body의 높이
+            sidebar.style.height = `${bodyHeight-70}px`;
+        };
+
+        // 화면 크기 변경 시에도 사이드바 높이 업데이트
+        window.addEventListener('resize', () => {
+            const sidebar = document.querySelector('.sidebar');
+            const bodyHeight = document.body.clientHeight; // body의 높이
+            sidebar.style.height = `${bodyHeight-70}px`;
+        });
+    </script>
 
 </body>
 </html>

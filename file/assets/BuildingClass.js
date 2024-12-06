@@ -2,7 +2,7 @@ import {
     canvas, ctx, 
     gameSettings, prices, limits, 
     unitMovement, userInfo, state, 
-    hexMap, unitMap, buildingMap, user} from "./map.js";
+    hexMap, unitMap, buildingMap, user, savedata} from "./map.js";
 import { createHexMap } from "./CenterRelatedFunc.js";
 import { 
     buildUnit, meleeUnit, 
@@ -120,6 +120,7 @@ class Building {
                     unitMap[tile.row][tile.col] = unit;
                     user.insertUnit(unit);
                     createHexMap(gameSettings.rows, gameSettings.cols);
+                    savedata();
                 }
                 return false; // 생산 완료된 유닛은 대기열에서 제거
             }

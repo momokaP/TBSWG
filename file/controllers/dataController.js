@@ -334,7 +334,7 @@ const getGameUser = asyncHandler(async (req, res) => {
         }
 
         const username = user.username;  // 사용자 이름 가져오기
-        console.log("test");
+
         // 사용자 이름에 해당하는 Hex Map 데이터 가져오기
         const gameuser = await gameUser.find({ username: username }).lean();
 
@@ -356,8 +356,40 @@ const getGameUser = asyncHandler(async (req, res) => {
     }
 });
 
+// @desc Delete all user data
+// @route DELETE /data/delete-all
+const deleteAllUserData = asyncHandler(async (req, res) => {
+    try {
+        // 토큰에서 사용자 정보 확인
+        const token = req.cookies.token;
+        if (!token) {
+            return res.status(401).json({ message: "인증되지 않은 사용자입니다." });
+        }
+
+        const decoded = jwt.verify(token, jwtSecret);
+        const user = await User.findById(decoded.id); // 사용자 정보 찾기
+        if (!user) {
+            return res.status(401).json({ message: "사용자를 찾을 수 없습니다." });
+        }
+
+        const username = user.username; // 사용자 이름 가져오기
+
+        // 모든 관련 데이터를 삭제
+        await HexMap.deleteMany({ username });
+        await UnitMap.deleteMany({ username });
+        await BuildingMap.deleteMany({ username });
+        await gameUser.deleteMany({ username });
+
+        res.status(200).json({ message: "모든 사용자 데이터가 성공적으로 삭제되었습니다!" });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "데이터 삭제 중 오류가 발생했습니다." });
+    }
+});
+
 module.exports = { 
     saveHexMap, getHexMap, 
     saveUnitMap, getUnitMap, 
     saveBuildingtMap, getBulidingMap,
-    saveGameUser, getGameUser };
+    saveGameUser, getGameUser,
+    deleteAllUserData };

@@ -8,7 +8,7 @@ import {
     canvas, ctx, 
     gameSettings, prices, limits, 
     unitMovement, userInfo, state, 
-    hexMap, unitMap, buildingMap, user} from "./map.js";
+    hexMap, unitMap, buildingMap, user, savedata} from "./map.js";
 import { createHexMap } from "./CenterRelatedFunc.js";
 import { 
     buildUnit, 
@@ -29,10 +29,10 @@ export function switchcase_makeButton(tile) {
         case state.selectedUnit instanceof buildUnit:
             // 건설 유닛이면 기능에 유닛의 건설하기 버튼 추가
             makeBuildButton(tile, 1, "mainBuilding");
-            makeBuildButton(tile, 2, "developmentBuilding");
-            makeBuildButton(tile, 3, "meleeUnitBuilding");
-            makeBuildButton(tile, 4, "rangedUnitBuilding");
-            makeBuildButton(tile, 5, "eliteUnitBuilding");
+            //makeBuildButton(tile, 2, "developmentBuilding");
+            makeBuildButton(tile, 2, "meleeUnitBuilding");
+            makeBuildButton(tile, 3, "rangedUnitBuilding");
+            makeBuildButton(tile, 4, "eliteUnitBuilding");
             break;
         case state.selectedUnit instanceof meleeUnit:
             break;
@@ -137,6 +137,7 @@ export function makeBuildButton(tile, number = 1, whatBuilding) {
                 buildingMap[tile.row][tile.col] = building;
                 user.insertBuilding(building);
                 user.resourceAmount -= canAffordBuilding(); // 자원 차감
+                savedata();
             }
             createHexMap(gameSettings.rows, gameSettings.cols);
         }
@@ -148,7 +149,7 @@ export function makeUnitButton(tile, number = 1, whatBuilding) {
         const Button_1 = document.createElement(`button-${number}`);
         Button_1.id = `Button_${number}`;
         Button_1.textContent = "생산하기";
-        if (canAffordUnit() <= 0) {
+        if (canAffordUnit() <= 0 || checkUnitCapacity()) {
             Button_1.style.backgroundColor = "#ccc"; // 비활성화 색상
             Button_1.style.cursor = "not-allowed";
         }
@@ -199,20 +200,28 @@ export function makeUnitButton(tile, number = 1, whatBuilding) {
 
         switch (whatBuilding) {
             case "mainBuilding":
-                isUnitLimitExceeded = buildUnitCount + user.pendingBuildUnits >= limitOfBuildUnit;
+                isUnitLimitExceeded = 
+                buildUnitCount + user.pendingBuildUnits >= limitOfBuildUnit;   
                 break;
             case "meleeUnitBuilding":
-                isUnitLimitExceeded = meleeUnitCount + user.pendingMeleeUnits >= limitOfMeleeUnit;
+                isUnitLimitExceeded = 
+                meleeUnitCount + user.pendingMeleeUnits >= limitOfMeleeUnit;
                 break;
             case "rangedUnitBuilding":
-                isUnitLimitExceeded = rangedUnitCount + user.pendingRangedUnits >= limitOfRangedUnit;
+                isUnitLimitExceeded = 
+                rangedUnitCount + user.pendingRangedUnits >= limitOfRangedUnit;
                 break;
             case "eliteUnitBuilding":
-                isUnitLimitExceeded = eliteUnitCount + user.pendingEliteUnits >= limitOfEliteUnit;
+                isUnitLimitExceeded = 
+                eliteUnitCount + user.pendingEliteUnits >= limitOfEliteUnit;
                 break;
             default:
                 console.log(`알 수 없는 건물 유형: ${whatBuilding}`);
                 return false;
+        }
+        if((buildingMap[tile.row][tile.col].pendingUnits.length >= 
+            limits.pendingUnit)){
+            isUnitLimitExceeded = true;
         }
         return isUnitLimitExceeded;
     }
@@ -257,7 +266,7 @@ export function makeUnitButton(tile, number = 1, whatBuilding) {
                 console.log(`몰루?`);
         }
 
-        const unitProductionDelay = 1; // 유닛 생산에 필요한 턴 수
+        const unitProductionDelay = 3; // 유닛 생산에 필요한 턴 수
         const currentTurn = gameSettings.turn; // 현재 턴을 가져오는 로직
 
 
@@ -283,6 +292,7 @@ export function makeUnitButton(tile, number = 1, whatBuilding) {
         let pendingUnits = selectedBuilding.pendingUnits.length;
         document.getElementById("move-value").innerHTML =
             `${penddingTurns}턴 뒤 유닛 생산<br>${pendingUnits}개 대기중`;
+        savedata();
     }
 }
 

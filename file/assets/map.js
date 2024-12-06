@@ -40,12 +40,12 @@ let oldSelectedUnit = null; // 이전에 선택된 유닛
 // 게임 설정 객체
 export const gameSettings = {
     hexRadius: 50, // 육각형 타일의 반지름
-    rows: 45, // 행 수
-    cols: 45, // 열 수
+    rows: 15, // 행 수
+    cols: 15, // 열 수
     turn: 1, // 현재 턴
     mapOffset: { x: 0, y: 0 }, // 맵 이동
     initial: true, // 초기 상태
-    unitStartPosition: { row: 22, col: 22 }, // 유닛 초기 위치
+    unitStartPosition: { row: 7, col: 7 }, // 유닛 초기 위치
 };
 
 // 자원 및 가격 정보 객체
@@ -80,7 +80,8 @@ export const limits = {
     meleeUnit: 3,
     rangedUnit: 3,
     eliteUnit: 3,
-    development: 3,
+    development: 1,
+    pendingUnit: 1,
 };
 
 // 유닛 이동 거리
@@ -208,8 +209,8 @@ canvas.addEventListener("click", (event) => {
                         //현재 클릭한 유닛과 이전에 클릭한 유닛이 다를 때
                         if (tile.color === "yellow" && oldSelectedUnit
                             && state.selectedUnit.user !== oldSelectedUnit.user) {
+                            // 유닛의 유닛 공격
                             if (oldSelectedUnit && oldSelectedUnit.move > 0) {
-                                //현재 클릭한 유닛의 유저와 이전에 클릭한 유닛의 유저가 다를 때 공격한다
                                 if (oldSelectedUnit instanceof meleeUnit || oldSelectedUnit instanceof rangedUnit || oldSelectedUnit instanceof eliteUnit) {
                                     console.log(`attack!`);
                                     unitAttacked = true;
@@ -230,24 +231,32 @@ canvas.addEventListener("click", (event) => {
 
                                         animateProjectile(fromX, fromY, toX, toY, () => {
                                             // 투사체 도착 후 공격 처리
-                                            console.log(`ranged attack!`);
-                                            attackedMotion(dx, dy, state.selectedUnit);
+                                            (async function() {
+                                                await attackedMotion(dx, dy, state.selectedUnit);
+                                                savedata();
+                                            })();
                                         });
                                     }
                                     else {
-                                        attackedMotion(dx, dy, state.selectedUnit);
+                                        (async function() {
+                                            await attackedMotion(dx, dy, state.selectedUnit);
+                                            savedata();
+                                        })();
+                                        //attackedMotion(dx, dy, state.selectedUnit);
                                     }
                                     document.getElementById("health-value").textContent = `체력: ${state.selectedUnit.health}`;
                                 }
                             }
 
                             if (state.selectedUnit.health <= 0) {
+                                console.log("유닛 사망");
                                 user.deleteUnit(unitMap[state.selectedUnit.row][state.selectedUnit.col]);
                                 // 이전에 클릭한 유닛의 체력이 0이하가 되면 유닛 제거
                                 unitMap[state.selectedUnit.row][state.selectedUnit.col] = null;
                                 // 해당 타일의 유닛 제거
                                 hexMap[state.selectedUnit.row][state.selectedUnit.col].deleteUnit();
-
+                                
+                                savedata();
                                 clearStatus();
                                 clearButton();
                             }
@@ -275,6 +284,8 @@ canvas.addEventListener("click", (event) => {
                     if ((tile.color === "yellow" || tile.color === "gold") && !unitMap[tile.row][tile.col]) {
                         if (buildingMap[tile.row][tile.col] && oldSelectedUnit
                             && buildingMap[tile.row][tile.col].user !== oldSelectedUnit.user) {
+                            // 유닛의 건물 공격
+                            // 나의 공격 유닛이 상대 유저의 건물을 클릭하면 건물을 공격한다
                             if (oldSelectedUnit && oldSelectedUnit.move > 0) {
                                 if (oldSelectedUnit instanceof meleeUnit || oldSelectedUnit instanceof rangedUnit || oldSelectedUnit instanceof eliteUnit) {
                                     console.log(`건물피격 판정`);
@@ -317,8 +328,10 @@ canvas.addEventListener("click", (event) => {
                                 clearStatus();
                                 clearButton();
                             }
+                            savedata();
                         }
                         else {
+                            // 유닛의 이동
                             if (state.selectedUnit && state.selectedUnit.move > 0) {
                                 state.selectedUnit.move = state.selectedUnit.move - 1;
                                 document.getElementById("move-value").textContent = `${state.selectedUnit.move}`;
@@ -333,6 +346,7 @@ canvas.addEventListener("click", (event) => {
                                 switchcase_makeButton(tile);
 
                                 state.selectedUnit = null; // 유닛을 이동시킨 후 선택 해제
+                                savedata();
                                 createHexMap(gameSettings.rows, gameSettings.cols);
                             }
                             else {
@@ -393,14 +407,14 @@ canvas.addEventListener("click", (event) => {
                     switch (true) {
                         case state.selectedBuilding instanceof mainBuilding:
                             makeUnitButton(tile, 1, "mainBuilding");
-                            makeDevelopmentButton(tile, 2, "mainBuildingImprovement")
+                            //makeDevelopmentButton(tile, 2, "mainBuildingImprovement")
                             break;
                         case state.selectedBuilding instanceof developmentBuilding:
-                            makeDevelopmentButton(tile, 1, "developmentImprovement");
-                            makeDevelopmentButton(tile, 2, "productionImprovement");
-                            makeDevelopmentButton(tile, 3, "meleeUnitImprovement");
-                            makeDevelopmentButton(tile, 4, "rangedUnitImprovement");
-                            makeDevelopmentButton(tile, 5, "eliteUnitImprovement");
+                            //makeDevelopmentButton(tile, 1, "developmentImprovement");
+                            //makeDevelopmentButton(tile, 2, "productionImprovement");
+                            //makeDevelopmentButton(tile, 3, "meleeUnitImprovement");
+                            //makeDevelopmentButton(tile, 4, "rangedUnitImprovement");
+                            //makeDevelopmentButton(tile, 5, "eliteUnitImprovement");
                             break;
                         case state.selectedBuilding instanceof meleeUnitBuilding:
                             makeUnitButton(tile, 1, "meleeUnitBuilding");
@@ -517,6 +531,36 @@ moveSpeedSlider.addEventListener("input", (event) => {
     moveSpeedValue.textContent = moveSpeed;  // 슬라이더 값 표시
 });
 
+
+const gameEndButton = document.getElementById("end-game-btn");
+gameEndButton.addEventListener("click", function () {
+    // 종료 확인 창 표시
+    const userConfirmed = confirm("정말로 게임을 종료하시겠습니까?");
+    
+    if (userConfirmed) {
+        // 확인을 누르면 DELETE 요청 전송
+        fetch("/data/delete-all", {
+            method: "DELETE",
+        })
+        .then(response => {
+            if (response.ok) {
+                // 성공 시 다른 페이지로 리다이렉트
+                window.location.href = "/";
+            } else {
+                alert("게임 종료 중 오류가 발생했습니다. 다시 시도해주세요.");
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            alert("서버와의 연결에 문제가 발생했습니다.");
+        });
+    } else {
+        // 취소를 누른 경우 아무 작업도 하지 않음
+        console.log("사용자가 종료를 취소했습니다.");
+    }
+});
+
+
 function nextTurn() {
     // 턴을 표시하는 div 요소
     const turnElement = document.getElementById("turn");
@@ -542,99 +586,7 @@ function nextTurn() {
         user.gatheredResources();
         user.processPending();
 
-        const formattedHexMap = hexMap.map((row, rowIndex) =>
-            row
-                .map((tile, colIndex) => {
-                    // resource가 true일 때만 객체를 생성
-                    if (tile.resource) {
-                        return {
-                            row: rowIndex,
-                            col: colIndex,
-                            resource: tile.resource,
-                            resourceAmount: tile.resourceAmount,
-                        };
-                    }
-                    return null; // resource가 없으면 null 반환
-                })
-                .filter(tile => tile !== null) // null 값 제거
-        );
-
-        const formattedUnitMap = unitMap.map((row, rowIndex) =>
-            row
-                .map((unit, colIndex) => {
-                    // resource가 true일 때만 객체를 생성
-                    if (unit) {
-                        return {
-                            name: unit.name,
-                            row: rowIndex,
-                            col: colIndex,
-                            health: unit.health,
-                            damage: unit.damage,
-                            move: unit.move,
-                            user: unit.user,
-                            color: unit.color,
-                        };
-                    }
-                    return null; // resource가 없으면 null 반환
-                })
-                .filter(unit => unit !== null) // null 값 제거
-        );
-
-        const formattedBuildingMap = buildingMap.map((row, rowIndex) =>
-            row
-                .map((building, colIndex) => {
-                    // resource가 true일 때만 객체를 생성
-                    if (building) {
-                        return {
-                            name: building.name,
-                            row: rowIndex,
-                            col: colIndex,
-                            health: building.health,
-                            user: building.user,
-                            // pendingUnits가 배열이고 모든 요소가 유효한 경우만 저장
-                            pendingUnits: Array.isArray(building.pendingUnits)
-                            ? building.pendingUnits
-                                .filter(unit => unit.startTurn !== undefined &&
-                                                unit.delay !== undefined &&
-                                                unit.buildingType !== undefined &&
-                                                unit.tile !== undefined)
-                                .map(unit => ({
-                                    startTurn: unit.startTurn,
-                                    delay: unit.delay,
-                                    buildingType: unit.buildingType,
-                                    tile: unit.tile,
-                                }))
-                            : [],
-                            // pendingDevelopment가 배열이고 모든 요소가 유효한 경우만 저장
-                            pendingDevelopment: Array.isArray(building.pendingDevelopment)
-                            ? building.pendingDevelopment
-                                .filter(dev => dev.startTurn !== undefined &&
-                                                dev.delay !== undefined &&
-                                                dev.developmentType !== undefined &&
-                                                dev.tile !== undefined)
-                                .map(dev => ({
-                                    startTurn: dev.startTurn,
-                                    delay: dev.delay,
-                                    developmentType: dev.developmentType,
-                                    tile: dev.tile,
-                                }))
-                            : [],
-                            gatherResources: building.gatherResources,
-                        };
-                    }
-                    return null; // resource가 없으면 null 반환
-                })
-                .filter(building => building !== null) // null 값 제거
-        );
-
-        //console.log(formattedHexMap);
-        //console.log(formattedUnitMap);
-        //console.log(formattedBuildingMap);
-
-        saveHexMapToServer(formattedHexMap);
-        saveUnitMapToServer(formattedUnitMap);
-        saveBuildingMapToServer(formattedBuildingMap);
-        saveGameUserToServer(user);
+        savedata();
 
         renderHexMap();
         renderUnitMap();
@@ -657,8 +609,100 @@ document.addEventListener("DOMContentLoaded", async () => {
     await renderGameUser();
     userStatusUpdate();
 
-    createHexMap(gameSettings.rows, gameSettings.cols); // 45행, 45열의 육각형 맵
+    createHexMap(gameSettings.rows, gameSettings.cols); // 15행, 15열의 육각형 맵
 });
+
+export function savedata() {
+    const formattedHexMap = hexMap.map((row, rowIndex) => row
+        .map((tile, colIndex) => {
+            // resource가 true일 때만 객체를 생성
+            if (tile.resource) {
+                return {
+                    row: rowIndex,
+                    col: colIndex,
+                    resource: tile.resource,
+                    resourceAmount: tile.resourceAmount,
+                };
+            }
+            return null; // resource가 없으면 null 반환
+        })
+        .filter(tile => tile !== null) // null 값 제거
+    );
+
+    const formattedUnitMap = unitMap.map((row, rowIndex) => row
+        .map((unit, colIndex) => {
+            // resource가 true일 때만 객체를 생성
+            if (unit) {
+                return {
+                    name: unit.name,
+                    row: rowIndex,
+                    col: colIndex,
+                    health: unit.health,
+                    damage: unit.damage,
+                    move: unit.move,
+                    user: unit.user,
+                    color: unit.originalColor,
+                };
+            }
+            return null; // resource가 없으면 null 반환
+        })
+        .filter(unit => unit !== null) // null 값 제거
+    );
+
+    const formattedBuildingMap = buildingMap.map((row, rowIndex) => row
+        .map((building, colIndex) => {
+            // resource가 true일 때만 객체를 생성
+            if (building) {
+                return {
+                    name: building.name,
+                    row: rowIndex,
+                    col: colIndex,
+                    health: building.health,
+                    user: building.user,
+                    // pendingUnits가 배열이고 모든 요소가 유효한 경우만 저장
+                    pendingUnits: Array.isArray(building.pendingUnits)
+                        ? building.pendingUnits
+                            .filter(unit => unit.startTurn !== undefined &&
+                                unit.delay !== undefined &&
+                                unit.buildingType !== undefined &&
+                                unit.tile !== undefined)
+                            .map(unit => ({
+                                startTurn: unit.startTurn,
+                                delay: unit.delay,
+                                buildingType: unit.buildingType,
+                                tile: unit.tile,
+                            }))
+                        : [],
+                    // pendingDevelopment가 배열이고 모든 요소가 유효한 경우만 저장
+                    pendingDevelopment: Array.isArray(building.pendingDevelopment)
+                        ? building.pendingDevelopment
+                            .filter(dev => dev.startTurn !== undefined &&
+                                dev.delay !== undefined &&
+                                dev.developmentType !== undefined &&
+                                dev.tile !== undefined)
+                            .map(dev => ({
+                                startTurn: dev.startTurn,
+                                delay: dev.delay,
+                                developmentType: dev.developmentType,
+                                tile: dev.tile,
+                            }))
+                        : [],
+                    gatherResources: building.gatherResources,
+                };
+            }
+            return null; // resource가 없으면 null 반환
+        })
+        .filter(building => building !== null) // null 값 제거
+    );
+
+    //console.log(formattedHexMap);
+    //console.log(formattedUnitMap);
+    //console.log(formattedBuildingMap);
+    saveHexMapToServer(formattedHexMap);
+    saveUnitMapToServer(formattedUnitMap);
+    saveBuildingMapToServer(formattedBuildingMap);
+    saveGameUserToServer(user);
+}
 
 function userStatusUpdate(){
     user.reset();
@@ -833,7 +877,23 @@ async function renderBuildingMap() {
                         buildingType: unit.buildingType,
                         tile: unit.tile,
                     };
-                    buildingMap[building.row][building.col].pendingUnits.push(unitData);
+                    
+                    // 기존 pendingUnits에 동일한 유닛이 있는지 확인
+                    const exists = buildingMap[building.row][building.col].pendingUnits.some(existingUnit => {
+                        return existingUnit.startTurn === unitData.startTurn &&
+                            existingUnit.delay === unitData.delay &&
+                            existingUnit.buildingType === unitData.buildingType &&
+                            existingUnit.tile.row === unitData.tile.row &&
+                            existingUnit.tile.col === unitData.tile.col;
+                    });
+
+                    // 동일한 유닛이 없으면 추가
+                    if (!exists) {
+                        buildingMap[building.row][building.col].pendingUnits.push(unitData);
+                        //console.log(`Pending Unit: Type: ${unit.buildingType}, Start Turn: ${unit.startTurn}`);
+                    }
+                    
+                    //buildingMap[building.row][building.col].pendingUnits.push(unitData);
                     //console.log(`Pending Unit: Type: ${unit.buildingType}, Start Turn: ${unit.startTurn}`);
                 })
                 //buildingMap[building.row][building.col].pendingUnits.push(building.pendingUnits);
@@ -876,6 +936,6 @@ async function renderBuildingMap() {
 gameSettings.initial=true;
 nextTurn();
 // 맵 생성 함수 호출
-createHexMap(gameSettings.rows, gameSettings.cols); // 45행, 45열의 육각형 맵
+createHexMap(gameSettings.rows, gameSettings.cols); // 15행, 15열의 육각형 맵
 ctx.clearRect(0, 0, canvas.width, canvas.height); // 캔버스를 지운 후
 

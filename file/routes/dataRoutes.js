@@ -5,7 +5,8 @@ const {
     saveHexMap, getHexMap,
     saveUnitMap, getUnitMap,
     saveBuildingtMap, getBulidingMap,
-    saveGameUser, getGameUser
+    saveGameUser, getGameUser,
+    deleteAllUserData
  } = require("../controllers/dataController");
 
 const router = express.Router();
@@ -23,5 +24,7 @@ router.route("/get-building-map").get(checkLogin_game, getBulidingMap);
 
 router.route("/save-gameUser").post(checkLogin_game, saveGameUser);
 router.route("/get-gameUser").get(checkLogin_game, getGameUser);
+
+router.route("/delete-all").delete(checkLogin_game, deleteAllUserData);
 
 module.exports = router;

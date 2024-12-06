@@ -11,6 +11,7 @@ class Unit {
         this.health = health; // 유닛 체력
         this.size = size;
         this.color = color;
+        this.originalColor = color;
         this.isSelected = false; // 유닛 선택 상태
         this.x = null;
         this.y = null;

@@ -155,7 +155,8 @@ export function createHexMap(rows, cols) {
 
                 // 테스트 용
                 const unit2 = new meleeUnit(gameSettings.hexRadius / 2, userInfo.test, "black", "근접 유닛", 1000, 50); // 유닛 크기와 색상 설정
-                unitMap[21][20] = unit2;
+                unit2.originalColor = "black";
+                unitMap[row-1][col-1] = unit2;
 
                 tile.draw(ctx, gameSettings.mapOffset.x, gameSettings.mapOffset.y); // 타일 그리기
             }
@@ -168,10 +169,10 @@ export function createHexMap(rows, cols) {
 // 특정 좌표에 있는 타일들을 빨간색으로 설정
 function markRedTiles() {
     const redTilePositions = [
-        [8 - 1, 8 - 1], [8 - 1, 23 - 1], [8 - 1, 38 - 1],
-        [23 - 1, 8 - 1], [23 - 1, 23 - 1], [23 - 1, 38 - 1],
-        [38 - 1, 8 - 1], [38 - 1, 23 - 1], [38 - 1, 38 - 1],
-        [16 - 1, 16 - 1], [30 - 1, 16 - 1], [16 - 1, 30 - 1], [30 - 1, 30 - 1]
+        [3 - 1, 3 - 1], [3 - 1, 8 - 1], [3 - 1, 13 - 1],
+        [8 - 1, 3 - 1], [8 - 1, 8 - 1], [8 - 1, 13 - 1],
+        [13 - 1, 3 - 1], [13 - 1, 8 - 1], [13 - 1, 13 - 1],
+        [6 - 1, 6 - 1], [10 - 1, 6 - 1], [6 - 1, 10 - 1], [10 - 1, 10 - 1]
     ];
 
     redTilePositions.forEach(([row, col]) => {
