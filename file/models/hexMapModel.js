@@ -10,6 +10,7 @@ const hexMapSchema = new Schema({
     resourceAmount: Number,
     
     username: String,
+    gameroom: String,
     createdAt: {
         type: Date,
         default: Date.now, // 문서가 생성될 때의 시간

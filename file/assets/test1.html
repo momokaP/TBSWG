@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hex Tile Map</title>
     <link rel="stylesheet" href="css/game.css">
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
     <header class="header">
@@ -18,13 +19,22 @@
     <below>
         <left>
             <div class="sidebar">
-                <h2>사이드바</h2>
+                <h2 id="gameroom-title"></h2>
                 <!-- 사이드바 내용 추가 -->
                 <ul>
-                    <li>메뉴 1</li>
-                    <li>메뉴 2</li>
-                    <li>메뉴 3</li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
                 </ul>
+
+                <!-- 채팅창 추가 -->
+                <div class="chat-container">
+                    <div class="chat-messages" id="chat-messages"></div>
+                    <div class="chat-input">
+                        <input type="text" id="chat-input" placeholder="메시지를 입력하세요">
+                        <button id="send-btn">전송</button>
+                    </div>
+                </div>
 
                 <button class="end-game-btn" id="end-game-btn">게임 종료</button>
             </div>
@@ -34,8 +44,8 @@
             <main>
                 <div class="controls">
                     <div class="slider-item">
-                        <label for="tileSizeSlider">타일 크기: <span id="tileSizeValue">50</span></label>
-                        <input type="range" id="tileSizeSlider" min="10" max="100" value="50">
+                        <label for="tileSizeSlider">타일 크기: <span id="tileSizeValue">14</span></label>
+                        <input type="range" id="tileSizeSlider" min="10" max="100" value="14">
                     </div>
 
                     <div class="slider-item empty"></div>
@@ -83,7 +93,48 @@
     <script type="module" src="map.js"></script>
 
     <script>
-        window.onload = () => {
+        // 채팅 기능 구현
+        const socket = io();
+
+        let gameroom;
+        let username;
+
+        async function fetchGameRoom(){
+            try {
+                const response = await fetch('/data/gameroom'); // 서버에서 데이터 받아오기
+                const data = await response.json();
+                gameroom = data.gameroom;
+                username = data.username;
+
+                // 사이드바의 제목을 gameroom으로 변경
+                document.getElementById('gameroom-title').textContent = gameroom;
+
+                // usernames 배열을 사용해 사이드바 메뉴 생성
+                const userListElement = document.querySelector('.sidebar ul');
+                userListElement.innerHTML = ''; // 기존 메뉴 지우기
+                
+                data.usernames.forEach(user => {
+                    const listItem = document.createElement('li');
+                    
+                    // 현재 사용자와 같은 이름이면 'my' 추가
+                    if (user === username) {
+                        listItem.textContent = `${user} (me)`;
+                    } else {
+                        listItem.textContent = user;
+                    }
+
+                    userListElement.appendChild(listItem);
+                });
+
+                //console.log(gameroom);
+            } catch (error) {
+                console.error('Error fetching gameroom');
+            }
+        }
+
+        window.onload = async () => {
+            await fetchGameRoom();
+            socket.emit('joinGameRoom', gameroom);
             const sidebar = document.querySelector('.sidebar');
             const bodyHeight = document.body.clientHeight; // body의 높이
             sidebar.style.height = `${bodyHeight-70}px`;
@@ -94,6 +145,32 @@
             const sidebar = document.querySelector('.sidebar');
             const bodyHeight = document.body.clientHeight; // body의 높이
             sidebar.style.height = `${bodyHeight-70}px`;
+        });
+
+        // 메시지 전송
+        document.getElementById('send-btn').addEventListener('click', () => {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            console.log("hey");
+            if (message) {
+                socket.emit('chat game message', message, gameroom, username);
+                input.value = '';
+            }
+        });
+
+        // 서버로부터 채팅 기록 수신
+        socket.on('chat history', (messages) => {
+            const chatMessages = document.getElementById('chat-messages');
+            chatMessages.innerHTML = ''; // 기존 메시지 초기화
+
+            messages.forEach((msg) => {
+                if (msg.user && msg.text) {  // 유효한 메시지만 렌더링
+                    const messageElement = document.createElement('div');
+                    messageElement.textContent = `${msg.user}: ${msg.text}`;
+                    chatMessages.appendChild(messageElement);
+                }
+            });
+            chatMessages.scrollTop = chatMessages.scrollHeight; // 스크롤을 가장 아래로 이동
         });
     </script>
 

@@ -1,3 +1,6 @@
+import { io } from "/socket.io/socket.io.esm.min.js"; // ESM 방식 사용 시
+const socket = io(); // 서버와 연결
+
 import { buildUnit, meleeUnit, rangedUnit, eliteUnit } from "./UnitClass.js";
 import { mainBuilding, developmentBuilding, 
          meleeUnitBuilding, rangedUnitBuilding, 
@@ -29,6 +32,8 @@ const moveSpeedValue = document.getElementById("moveSpeedValue");
 
 let scaleChange = 1;
 
+let gameroom;
+
 // 리스너용 전역 변수들
 let isDragging = false; // 마우스 드래그 여부
 let startX, startY; // 마우스 드래그 시작 위치 x,y
@@ -36,16 +41,23 @@ let moveSpeed = 50; // 한 번에 이동할 거리 (픽셀 단위)
 canvas.tabIndex = 1000;  // tabIndex를 설정하여 캔버스가 포커스를 받을 수 있게 합니다.
 
 let oldSelectedUnit = null; // 이전에 선택된 유닛
+let whoturn;
 
 // 게임 설정 객체
 export const gameSettings = {
-    hexRadius: 50, // 육각형 타일의 반지름
+    hexRadius: 14, // 육각형 타일의 반지름
     rows: 15, // 행 수
     cols: 15, // 열 수
     turn: 1, // 현재 턴
+    oldturn: 1,
+    myturn: false,
     mapOffset: { x: 0, y: 0 }, // 맵 이동
     initial: true, // 초기 상태
-    unitStartPosition: { row: 7, col: 7 }, // 유닛 초기 위치
+    unit1_StartPosition: { row: 2, col: 7 }, // 유닛 초기 위치
+    unit2_StartPosition: { row: 12, col: 7 }, // 유닛 초기 위치
+    username,
+    win:2,
+    lose:2,
 };
 
 // 자원 및 가격 정보 객체
@@ -94,8 +106,9 @@ export const unitMovement = {
 
 // 사용자 정보
 export const userInfo = {
+    user: null,
     user1: "user1",
-    test: "test",
+    user2: "user2",
 };
 
 // 상태 및 이벤트 관련 변수들
@@ -114,7 +127,7 @@ export const hexMap = []; // 육각형 타일 정보를 저장할 배열
 export const unitMap = []; // 유닛 정보를 저장할 배열
 export const buildingMap = []; // 건물 정보를 저장할 배열
 
-export const user = new User(userInfo.user1);
+ 
 
 for (let row = 0; row < gameSettings.rows; row++) {
     hexMap[row] = []; // 각 행을 초기화
@@ -203,14 +216,21 @@ canvas.addEventListener("click", (event) => {
                     document.getElementById("function-value").textContent = `기능: ${state.selectedUnit.description}`;
 
                     clearButton();
-                    switchcase_makeButton(tile);
 
-                    if (state.selectedUnit !== oldSelectedUnit) {
+
+                    if(userInfo.user.name === state.selectedUnit.user && gameSettings.myturn ) switchcase_makeButton(tile);
+
+                    console.log(userInfo.user.name);
+                    if(oldSelectedUnit) console.log(oldSelectedUnit.user);
+
+                    if ( state.selectedUnit !== oldSelectedUnit ) {
                         //현재 클릭한 유닛과 이전에 클릭한 유닛이 다를 때
                         if (tile.color === "yellow" && oldSelectedUnit
                             && state.selectedUnit.user !== oldSelectedUnit.user) {
                             // 유닛의 유닛 공격
-                            if (oldSelectedUnit && oldSelectedUnit.move > 0) {
+                            if (oldSelectedUnit && oldSelectedUnit.move > 0 &&
+                                userInfo.user.name === oldSelectedUnit.user &&
+                                gameSettings.myturn) {
                                 if (oldSelectedUnit instanceof meleeUnit || oldSelectedUnit instanceof rangedUnit || oldSelectedUnit instanceof eliteUnit) {
                                     console.log(`attack!`);
                                     unitAttacked = true;
@@ -250,7 +270,7 @@ canvas.addEventListener("click", (event) => {
 
                             if (state.selectedUnit.health <= 0) {
                                 console.log("유닛 사망");
-                                user.deleteUnit(unitMap[state.selectedUnit.row][state.selectedUnit.col]);
+                                userInfo.user.deleteUnit(unitMap[state.selectedUnit.row][state.selectedUnit.col]);
                                 // 이전에 클릭한 유닛의 체력이 0이하가 되면 유닛 제거
                                 unitMap[state.selectedUnit.row][state.selectedUnit.col] = null;
                                 // 해당 타일의 유닛 제거
@@ -263,7 +283,9 @@ canvas.addEventListener("click", (event) => {
                         }
                         createHexMap(gameSettings.rows, gameSettings.cols);
                     }
-                    if (state.selectedUnit.health > 0 && !unitAttacked) {
+                    if (state.selectedUnit.health > 0 && !unitAttacked &&
+                        userInfo.user.name === state.selectedUnit.user &&
+                        gameSettings.myturn) {
                         highlightNearbyTiles(state.selectedUnit, gameSettings.rows, gameSettings.cols); // 근처 타일 색상 변경
                     }
 
@@ -286,7 +308,9 @@ canvas.addEventListener("click", (event) => {
                             && buildingMap[tile.row][tile.col].user !== oldSelectedUnit.user) {
                             // 유닛의 건물 공격
                             // 나의 공격 유닛이 상대 유저의 건물을 클릭하면 건물을 공격한다
-                            if (oldSelectedUnit && oldSelectedUnit.move > 0) {
+                            if (oldSelectedUnit && oldSelectedUnit.move > 0 &&
+                                oldSelectedUnit.user === userInfo.user.name &&
+                                gameSettings.myturn) {
                                 if (oldSelectedUnit instanceof meleeUnit || oldSelectedUnit instanceof rangedUnit || oldSelectedUnit instanceof eliteUnit) {
                                     console.log(`건물피격 판정`);
                                     buildingAttacked = true;
@@ -319,7 +343,7 @@ canvas.addEventListener("click", (event) => {
                             }
 
                             if (buildingMap[tile.row][tile.col].health <= 0) {
-                                user.deleteBuilding(buildingMap[buildingMap[tile.row][tile.col].row][buildingMap[tile.row][tile.col].col]);
+                                userInfo.user.deleteBuilding(buildingMap[buildingMap[tile.row][tile.col].row][buildingMap[tile.row][tile.col].col]);
                                 // 이전에 클릭한 건물의 체력이 0이하가 되면 건물 제거
                                 buildingMap[tile.row][tile.col] = null;
                                 // 해당 타일의 건물 제거
@@ -332,7 +356,9 @@ canvas.addEventListener("click", (event) => {
                         }
                         else {
                             // 유닛의 이동
-                            if (state.selectedUnit && state.selectedUnit.move > 0) {
+                            if (gameSettings.myturn &&
+                                userInfo.user.name === state.selectedUnit.user &&
+                                state.selectedUnit && state.selectedUnit.move > 0) {
                                 state.selectedUnit.move = state.selectedUnit.move - 1;
                                 document.getElementById("move-value").textContent = `${state.selectedUnit.move}`;
                                 // 유닛을 다른 타일로 이동 시키기 위해 unitMap에서 이전의 유닛 제거
@@ -383,20 +409,22 @@ canvas.addEventListener("click", (event) => {
                     document.getElementById("owner-value").textContent = `${state.selectedBuilding.user}`;
                     document.getElementById("health-value").textContent = `체력: ${state.selectedBuilding.health}`;
                     document.getElementById("move").textContent = `대기 턴 수`;
-                    if (state.selectedBuilding.pendingUnits.length > 0) {
+                    if (state.selectedBuilding.pendingUnits.length > 0 &&
+                        state.selectedBuilding.user === userInfo.user.name) {
                         console.log("건물"+state.selectedBuilding.pendingUnits[0]);
                         console.log(state.selectedBuilding.pendingUnits.length);
                         let penddingTurns = state.selectedBuilding.pendingUnits[0].startTurn + state.selectedBuilding.pendingUnits[0].delay - gameSettings.turn;
                         let pendingUnits = state.selectedBuilding.pendingUnits.length;
                         console.log(`${penddingTurns} ${pendingUnits}`);
-                        document.getElementById("move-value").innerHTML =
-                            `${penddingTurns}턴 뒤 유닛 생산<br>${pendingUnits}개 대기중`;
+                        //document.getElementById("move-value").innerHTML =
+                        //    `${penddingTurns}턴 뒤 유닛 생산<br>${pendingUnits}개 대기중`;
                     }
-                    else if (state.selectedBuilding.pendingDevelopment.length > 0) {
+                    else if (state.selectedBuilding.pendingDevelopment.length > 0 &&
+                             state.selectedBuilding.user === userInfo.user.name) {
                         let penddingTurns = state.selectedBuilding.pendingDevelopment[0].startTurn + state.selectedBuilding.pendingDevelopment[0].delay - gameSettings.turn;
                         let pendingUnits = state.selectedBuilding.pendingDevelopment.length;
-                        document.getElementById("move-value").innerHTML =
-                            `${penddingTurns}턴 뒤 발전<br>${pendingUnits}개 대기중`;
+                        //document.getElementById("move-value").innerHTML =
+                        //    `${penddingTurns}턴 뒤 발전<br>${pendingUnits}개 대기중`;
                     }
                     else {
                         document.getElementById("move-value").textContent = ` `;
@@ -404,29 +432,32 @@ canvas.addEventListener("click", (event) => {
                     document.getElementById("function-value").textContent = `기능: ${state.selectedBuilding.description}`;
 
                     clearButton();
-                    switch (true) {
-                        case state.selectedBuilding instanceof mainBuilding:
-                            makeUnitButton(tile, 1, "mainBuilding");
-                            //makeDevelopmentButton(tile, 2, "mainBuildingImprovement")
-                            break;
-                        case state.selectedBuilding instanceof developmentBuilding:
-                            //makeDevelopmentButton(tile, 1, "developmentImprovement");
-                            //makeDevelopmentButton(tile, 2, "productionImprovement");
-                            //makeDevelopmentButton(tile, 3, "meleeUnitImprovement");
-                            //makeDevelopmentButton(tile, 4, "rangedUnitImprovement");
-                            //makeDevelopmentButton(tile, 5, "eliteUnitImprovement");
-                            break;
-                        case state.selectedBuilding instanceof meleeUnitBuilding:
-                            makeUnitButton(tile, 1, "meleeUnitBuilding");
-                            break;
-                        case state.selectedBuilding instanceof rangedUnitBuilding:
-                            makeUnitButton(tile, 1, "rangedUnitBuilding");
-                            break;
-                        case state.selectedBuilding instanceof eliteUnitBuilding:
-                            makeUnitButton(tile, 1, "eliteUnitBuilding");
-                            break;
-                        default:
-                            console.log("Building은 다른 클래스의 인스턴스입니다.");
+                    if(state.selectedBuilding.user === userInfo.user.name &&
+                        gameSettings.myturn){
+                        switch (true) {
+                            case state.selectedBuilding instanceof mainBuilding:
+                                makeUnitButton(tile, 1, "mainBuilding");
+                                //makeDevelopmentButton(tile, 2, "mainBuildingImprovement")
+                                break;
+                            case state.selectedBuilding instanceof developmentBuilding:
+                                //makeDevelopmentButton(tile, 1, "developmentImprovement");
+                                //makeDevelopmentButton(tile, 2, "productionImprovement");
+                                //makeDevelopmentButton(tile, 3, "meleeUnitImprovement");
+                                //makeDevelopmentButton(tile, 4, "rangedUnitImprovement");
+                                //makeDevelopmentButton(tile, 5, "eliteUnitImprovement");
+                                break;
+                            case state.selectedBuilding instanceof meleeUnitBuilding:
+                                makeUnitButton(tile, 1, "meleeUnitBuilding");
+                                break;
+                            case state.selectedBuilding instanceof rangedUnitBuilding:
+                                makeUnitButton(tile, 1, "rangedUnitBuilding");
+                                break;
+                            case state.selectedBuilding instanceof eliteUnitBuilding:
+                                makeUnitButton(tile, 1, "eliteUnitBuilding");
+                                break;
+                            default:
+                                console.log("Building은 다른 클래스의 인스턴스입니다.");
+                        }
                     }
 
                     createHexMap(gameSettings.rows, gameSettings.cols);
@@ -534,14 +565,73 @@ moveSpeedSlider.addEventListener("input", (event) => {
 
 const gameEndButton = document.getElementById("end-game-btn");
 gameEndButton.addEventListener("click", function () {
+    gamedelete();
+});
+
+// 클라이언트에서 방 삭제 처리
+socket.on('gameroomDeleted', (gameroom) => {
+    alert(`방 ${gameroom}이 삭제되었습니다.`);
+    window.location.href = '/';  // 메인 페이지로 리디렉션
+});
+
+
+function gamedelete() {
     // 종료 확인 창 표시
     const userConfirmed = confirm("정말로 게임을 종료하시겠습니까?");
-    
+
     if (userConfirmed) {
+        socket.emit('deleteGameRoom', gameroom); // 서버로 방 삭제 요청
+
+
         // 확인을 누르면 DELETE 요청 전송
         fetch("/data/delete-all", {
             method: "DELETE",
         })
+            .then(response => {
+                if (response.ok) {
+                    // 성공 시 다른 페이지로 리다이렉트
+                    window.location.href = "/";
+                } else {
+                    alert("게임 종료 중 오류가 발생했습니다. 다시 시도해주세요.");
+                }
+            })
+            .catch(error => {
+                window.location.href = "/";
+                console.error("Error:", error);
+                alert("서버와의 연결에 문제가 발생했습니다.");
+            });
+    } else {
+        // 취소를 누른 경우 아무 작업도 하지 않음
+        console.log("사용자가 종료를 취소했습니다.");
+    }
+}
+
+// 클라이언트에서 방 삭제 처리
+socket.on('Gameend', () => {
+    gameend();
+});
+
+function gameend() {
+    let iswin;
+
+    if(gameSettings.lose === 1){
+        alert("패배했습니다");
+        iswin = false;
+    }
+    else{
+        alert("승리했습니다");
+        iswin = true;
+    }
+
+
+    socket.emit('save record', iswin, userInfo.user.name, gameroom);
+    socket.emit('deleteGameRoom', gameroom); // 서버로 방 삭제 요청
+
+
+    // 확인을 누르면 DELETE 요청 전송
+    fetch("/data/delete-all", {
+        method: "DELETE",
+    })
         .then(response => {
             if (response.ok) {
                 // 성공 시 다른 페이지로 리다이렉트
@@ -551,15 +641,12 @@ gameEndButton.addEventListener("click", function () {
             }
         })
         .catch(error => {
+            window.location.href = "/";
             console.error("Error:", error);
             alert("서버와의 연결에 문제가 발생했습니다.");
         });
-    } else {
-        // 취소를 누른 경우 아무 작업도 하지 않음
-        console.log("사용자가 종료를 취소했습니다.");
-    }
-});
 
+}
 
 function nextTurn() {
     // 턴을 표시하는 div 요소
@@ -568,46 +655,63 @@ function nextTurn() {
     // 턴 넘기기 버튼
     const nextTurnButton = document.getElementById("nextTurnButton");
 
-    if (gameSettings.initial) turnElement.textContent = `턴: ${gameSettings.turn}`; // 텍스트 업데이트
+    //if (gameSettings.initial) turnElement.textContent = `턴: ${gameSettings.turn}`; // 텍스트 업데이트
 
     // 턴 넘기기 버튼 클릭 시 실행되는 함수
     nextTurnButton.addEventListener("click", function () {
-        gameSettings.turn++; // 턴을 증가시킴
-        turnElement.textContent = `턴: ${gameSettings.turn}`; // 텍스트 업데이트
+        if(gameSettings.myturn){
+            gameSettings.turn++; // 턴을 증가시킴
+            //turnElement.textContent = `턴: ${gameSettings.turn}`; // 텍스트 업데이트
 
-        for (let row = 0; row < gameSettings.rows; row++) {
-            for (let col = 0; col < gameSettings.cols; col++) {
-                if (unitMap[row] && unitMap[row][col]) {
-                    unitMap[row][col].move = unitMap[row][col].initialMove;
+            for (let row = 0; row < gameSettings.rows; row++) {
+                for (let col = 0; col < gameSettings.cols; col++) {
+                    if (unitMap[row] && unitMap[row][col]) {
+                        unitMap[row][col].move = unitMap[row][col].initialMove;
+                    }
                 }
             }
+
+            userInfo.user.gatheredResources();
+            //userInfo.user.processPending();
+
+            savedata();
+            updateGameRoom();
+
+            renderHexMap();
+            renderUnitMap();
+            renderBuildingMap();
+            renderGameUser();
+            userStatusUpdate();
+
+            createHexMap(gameSettings.rows, gameSettings.cols);
+            clearStatus();
+            clearButton();
+
+            //console.log("whoturn:",whoturn);
+            //document.getElementById("turn").textContent = `${whoturn}의 턴`;
         }
-
-        user.gatheredResources();
-        user.processPending();
-
-        savedata();
-
-        renderHexMap();
-        renderUnitMap();
-        renderBuildingMap();
-        renderGameUser();
-        userStatusUpdate();
-
-        createHexMap(gameSettings.rows, gameSettings.cols);
-        clearStatus();
-        clearButton();
     });
     
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+    await fetchGameRoom();
+    socket.emit("joinGameRoom", gameroom);
+
+    createHexMap(gameSettings.rows, gameSettings.cols); // 15행, 15열의 육각형 맵
+
     // 새로고침 하면 서버에서 데이터 가져와 렌더링
     await renderHexMap(); 
     await renderUnitMap();
     await renderBuildingMap();
     await renderGameUser();
     userStatusUpdate();
+
+    gameSettings.oldturn = gameSettings.turn;
+
+    savedata();
+
+    document.getElementById("turn").textContent = `${whoturn}의 턴`;
 
     createHexMap(gameSettings.rows, gameSettings.cols); // 15행, 15열의 육각형 맵
 });
@@ -701,29 +805,143 @@ export function savedata() {
     saveHexMapToServer(formattedHexMap);
     saveUnitMapToServer(formattedUnitMap);
     saveBuildingMapToServer(formattedBuildingMap);
-    saveGameUserToServer(user);
+    saveGameUserToServer(userInfo.user);
+
+    // 소켓을 통해 서버에 데이터 전송
+    socket.emit("save data", {
+        Message: "save data",
+        gameroom: gameroom,
+    });
 }
 
+async function fetchGameRoom(){
+    try {
+        const response = await fetch('/data/gameroom'); // 서버에서 데이터 받아오기
+        const data = await response.json();
+        gameroom = data.gameroom;
+        userInfo.user1 = data.usernames[0];
+        userInfo.user2 = data.usernames[1];
+        gameSettings.username = data.username;
+        gameSettings.initial=data.initial;
+    
+        console.log(userInfo.user1, userInfo.user2, gameSettings.username);
+    
+        if(gameSettings.username===userInfo.user1){
+            userInfo.user = new User(userInfo.user1);
+        }
+        else if(gameSettings.username===userInfo.user2){
+            userInfo.user = new User(userInfo.user2);
+        }
+
+        whoturn = data.myturn;
+
+        if(data.myturn === userInfo.user.name){
+            gameSettings.myturn = true;
+        }
+        else{
+            gameSettings.myturn = false;
+        }
+        console.log(gameSettings.myturn);
+    
+    } catch (error) {
+        console.error('Error fetching gameroom');
+    }
+}
+
+async function fetchGameRoom_turn(){
+    try {
+        const response = await fetch('/data/gameroom'); // 서버에서 데이터 받아오기
+        const data = await response.json();
+
+        if(data.myturn === userInfo.user.name){
+            gameSettings.myturn = true;
+        }
+        else{
+            gameSettings.myturn = false;
+        }
+        whoturn = data.myturn;
+        document.getElementById("turn").textContent = `${whoturn}의 턴`;
+        //console.log(gameSettings.myturn);
+    
+    } catch (error) {
+        console.error('Error fetching gameroom');
+    }
+}
+
+async function updateGameRoom(){
+    try {
+        let nextuser;
+        if(userInfo.user1 !== userInfo.user.name){
+            nextuser = userInfo.user1;
+        }
+        else{
+            nextuser = userInfo.user2;
+        }
+        console.log(nextuser);
+
+        const response = await fetch("/data/gameroom", {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json", // 서버가 JSON을 받는다고 알림
+            },
+            body: JSON.stringify({ 
+                initial: gameSettings.initial,
+                nextuser: nextuser  // nextuser 추가
+            }), // 서버로 JSON 형태로 데이터 전송
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            //alert("Hex map이 성공적으로 저장되었습니다.");
+        } else {
+            const error = await response.json();
+            alert(`Error: ${error.message}`);
+        }
+    } catch (error) {
+        console.error('Error updateing gameroom');
+    }
+}
+
+socket.on('save data', async (Message) => {
+    console.log("save data");
+    console.log(Message);
+
+    await renderHexMap(); 
+    await renderUnitMap();
+    await renderBuildingMap();
+    await renderGameUser();
+    userStatusUpdate();
+    fetchGameRoom_turn();
+
+    if(userInfo.user.unit.length <=0 && 
+        userInfo.user.building.length <=0){
+            gameSettings.lose = 1;
+            socket.emit('Gameend', gameroom); // 서버로 방 삭제 요청
+        }
+
+    createHexMap(gameSettings.rows, gameSettings.cols); // 15행, 15열의 육각형 맵
+});
+
 function userStatusUpdate(){
-    user.reset();
+    userInfo.user.reset();
     for(let row=0; row<gameSettings.rows; row++){
         for(let col=0; col<gameSettings.cols; col++){
             if (buildingMap[row] && buildingMap[row][col]){
-                if(buildingMap[row][col].user===user.name){
-                    user.insertBuilding(buildingMap[row][col]);
+                if(buildingMap[row][col].user===userInfo.user.name){
+                    userInfo.user.insertBuilding(buildingMap[row][col]);
 
                     switch (true) {
                         case buildingMap[row][col] instanceof mainBuilding:
-                            user.pendingBuildUnits+=buildingMap[row][col].pendingUnits.length;
+                            userInfo.user.pendingBuildUnits+=buildingMap[row][col].pendingUnits.length;
                             break;
                         case buildingMap[row][col] instanceof meleeUnitBuilding:
-                            user.pendingMeleeUnits+=buildingMap[row][col].pendingUnits.length;
+                            userInfo.user.pendingMeleeUnits+=buildingMap[row][col].pendingUnits.length;
                             break;
                         case buildingMap[row][col] instanceof rangedUnitBuilding:
-                            user.pendingRangedUnits+=buildingMap[row][col].pendingUnits.length;
+                            userInfo.user.pendingRangedUnits+=buildingMap[row][col].pendingUnits.length;
                             break;
                         case buildingMap[row][col] instanceof eliteUnitBuilding:
-                            user.pendingEliteUnits+=buildingMap[row][col].pendingUnits.length;
+                            userInfo.user.pendingEliteUnits+=buildingMap[row][col].pendingUnits.length;
                             break;
                         default:
                             console.log(`pass`);
@@ -731,8 +949,8 @@ function userStatusUpdate(){
                 }
             }
             if (unitMap[row] && unitMap[row][col]){
-                if(unitMap[row][col].user===user.name){
-                    user.insertUnit(unitMap[row][col]);
+                if(unitMap[row][col].user===userInfo.user.name){
+                    userInfo.user.insertUnit(unitMap[row][col]);
                 }
 
             }
@@ -745,9 +963,9 @@ async function renderGameUser(){
     if (gameUser.length === 0) return;
 
     gameUser.forEach((gameuser) => {
-        user.resourceAmount = gameuser.resourceAmount;
+        userInfo.user.resourceAmount = gameuser.resourceAmount;
         gameSettings.turn = gameuser.turn;
-        document.getElementById("turn").textContent = `턴: ${gameSettings.turn}`;
+        //document.getElementById("turn").textContent = `${whoturn}의 턴: ${gameSettings.turn}`;
     });
 }
 
@@ -888,7 +1106,7 @@ async function renderBuildingMap() {
                     });
 
                     // 동일한 유닛이 없으면 추가
-                    if (!exists) {
+                    if (!exists && buildingMap[building.row][building.col].pendingUnits.length <= 1) {
                         buildingMap[building.row][building.col].pendingUnits.push(unitData);
                         //console.log(`Pending Unit: Type: ${unit.buildingType}, Start Turn: ${unit.startTurn}`);
                     }
@@ -932,10 +1150,8 @@ async function renderBuildingMap() {
         }
     }
 }
-
-gameSettings.initial=true;
 nextTurn();
 // 맵 생성 함수 호출
-createHexMap(gameSettings.rows, gameSettings.cols); // 15행, 15열의 육각형 맵
+//createHexMap(gameSettings.rows, gameSettings.cols); // 15행, 15열의 육각형 맵
 ctx.clearRect(0, 0, canvas.width, canvas.height); // 캔버스를 지운 후
 

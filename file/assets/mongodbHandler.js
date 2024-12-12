@@ -2,7 +2,7 @@ import {
     canvas, ctx, 
     gameSettings, prices, limits, 
     unitMovement, userInfo, state, 
-    hexMap, unitMap, buildingMap, user} from "./map.js";
+    hexMap, unitMap, buildingMap} from "./map.js";
 
 // 클라이언트 측에서 데이터 전송 (fetch 사용)
 export async function saveHexMapToServer(formattedHexMap) {

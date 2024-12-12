@@ -3,7 +3,7 @@ import {
     canvas, ctx, 
     gameSettings, prices, limits, 
     unitMovement, userInfo, state, 
-    hexMap, unitMap, buildingMap, user} from "./map.js";
+    hexMap, unitMap, buildingMap} from "./map.js";
 import { buildUnit, meleeUnit } from "./UnitClass.js";
 
 export function showstatus(ctx) {
@@ -15,11 +15,11 @@ export function showstatus(ctx) {
 
     const {
         buildUnitCount, meleeUnitCount, rangedUnitCount, eliteUnitCount
-    } = user.howManyUnit();
+    } = userInfo.user.howManyUnit();
 
     const {
         limitOfBuildUnit, limitOfMeleeUnit, limitOfRangedUnit, limitOfEliteUnit
-    } = user.limitOfUnit();
+    } = userInfo.user.limitOfUnit();
 
     let howManyBuildUnit = `B:${buildUnitCount}/${limitOfBuildUnit}`;
     let howManyMeleeUnit = `M:${meleeUnitCount}/${limitOfMeleeUnit}`;
@@ -27,7 +27,7 @@ export function showstatus(ctx) {
     let howManyEliteUnitt = `E:${eliteUnitCount}/${limitOfEliteUnit}`;
 
     // 캔버스에 글씨 쓰기, 텍스트의 너비 계산
-    const text = `${howManyBuildUnit} ${howManyMeleeUnit} ${howManyRangedUnit} ${howManyEliteUnitt} 건물: ${user.building.length} 자원: ${user.resourceAmount}`;
+    const text = `${howManyBuildUnit} ${howManyMeleeUnit} ${howManyRangedUnit} ${howManyEliteUnitt} 건물: ${userInfo.user.building.length} 자원: ${userInfo.user.resourceAmount}`;
     const textWidth = ctx.measureText(text).width;
 
     const fontSize = parseInt(ctx.font); // "30px Arial"에서 숫자 부분만 가져오기
@@ -144,19 +144,36 @@ export function createHexMap(rows, cols) {
             }
 
             // 특정 타일에 유닛 배치 (예: (2,2) 위치에 유닛)
-            if (gameSettings.initial === true &&
-                row === gameSettings.unitStartPosition.row && col === gameSettings.unitStartPosition.col) {
+            if (gameSettings.initial === true) {
                 console.log("initial");
 
                 gameSettings.initial = false;
-                const unit = new buildUnit(gameSettings.hexRadius / 2); // 유닛 크기와 색상 설정
-                unitMap[row][col] = unit;
-                user.insertUnit(unit);
+
+                if(gameSettings.username===userInfo.user1){
+                    const unit1 = new buildUnit(gameSettings.hexRadius / 2); // 유닛 크기와 색상 설정
+                    unitMap[gameSettings.unit1_StartPosition.row][gameSettings.unit1_StartPosition.col] = unit1;
+                    unit1.user = userInfo.user1;
+                    userInfo.user.insertUnit(unit1);
+
+                    const unit2 = new buildUnit(gameSettings.hexRadius / 2); // 유닛 크기와 색상 설정
+                    unitMap[gameSettings.unit2_StartPosition.row][gameSettings.unit2_StartPosition.col] = unit2;
+                    unit2.user = userInfo.user2;
+                }
+                else if(gameSettings.username===userInfo.user2){
+                    const unit2 = new buildUnit(gameSettings.hexRadius / 2); // 유닛 크기와 색상 설정
+                    unitMap[gameSettings.unit2_StartPosition.row][gameSettings.unit2_StartPosition.col] = unit2;
+                    unit2.user = userInfo.user2;
+                    userInfo.user.insertUnit(unit2);
+
+                    const unit1 = new buildUnit(gameSettings.hexRadius / 2); // 유닛 크기와 색상 설정
+                    unitMap[gameSettings.unit1_StartPosition.row][gameSettings.unit1_StartPosition.col] = unit1;
+                    unit1.user = userInfo.user1;
+                }
 
                 // 테스트 용
-                const unit2 = new meleeUnit(gameSettings.hexRadius / 2, userInfo.test, "black", "근접 유닛", 1000, 50); // 유닛 크기와 색상 설정
-                unit2.originalColor = "black";
-                unitMap[row-1][col-1] = unit2;
+                //const unit2 = new meleeUnit(gameSettings.hexRadius / 2, userInfo.test, "black", "근접 유닛", 1000, 50); // 유닛 크기와 색상 설정
+                //unit2.originalColor = "black";
+                //unitMap[row-1][col-1] = unit2;
 
                 tile.draw(ctx, gameSettings.mapOffset.x, gameSettings.mapOffset.y); // 타일 그리기
             }

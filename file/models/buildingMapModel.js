@@ -24,6 +24,7 @@ const buildingMapSchema = new Schema({
     gatherResources: Number,
     
     username: String,
+    gameroom: String,
     createdAt: {
         type: Date,
         default: Date.now, // 문서가 생성될 때의 시간

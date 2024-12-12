@@ -2,7 +2,7 @@ import {
     canvas, ctx, 
     gameSettings, prices, limits, 
     unitMovement, userInfo, state, 
-    hexMap, unitMap, buildingMap, user} from "./map.js";
+    hexMap, unitMap, buildingMap} from "./map.js";
 import { buildUnit, meleeUnit, rangedUnit, eliteUnit } from "./UnitClass.js";
 import { HexTile } from "./HexTileClass.js";
 import { mainBuilding, developmentBuilding, meleeUnitBuilding, rangedUnitBuilding, eliteUnitBuilding } from "./BuildingClass.js";
@@ -79,7 +79,7 @@ export class User {
             }
         }
 
-        user.resourceAmount = user.resourceAmount + sum;
+        userInfo.user.resourceAmount = userInfo.user.resourceAmount + sum;
     }
     processPending() {
         for (let i = 0; i < this.numberOfBuilding; i++) {

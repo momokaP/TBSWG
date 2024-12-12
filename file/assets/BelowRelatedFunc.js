@@ -8,7 +8,7 @@ import {
     canvas, ctx, 
     gameSettings, prices, limits, 
     unitMovement, userInfo, state, 
-    hexMap, unitMap, buildingMap, user, savedata} from "./map.js";
+    hexMap, unitMap, buildingMap, savedata} from "./map.js";
 import { createHexMap } from "./CenterRelatedFunc.js";
 import { 
     buildUnit, 
@@ -106,7 +106,7 @@ export function makeBuildButton(tile, number = 1, whatBuilding) {
                 console.log(`알 수 없는 건물 유형: ${whatBuilding}`);
                 return false;
         }
-        return user.resourceAmount >= buildingCost ? buildingCost : 0;
+        return userInfo.user.resourceAmount >= buildingCost ? buildingCost : 0;
     }
 
     function switchcase_buildButton() {
@@ -134,9 +134,10 @@ export function makeBuildButton(tile, number = 1, whatBuilding) {
                     console.log(`알 수 없는 건물 유형: ${whatBuilding}`);
             }
             if (building) {
+                building.user = userInfo.user.name;
                 buildingMap[tile.row][tile.col] = building;
-                user.insertBuilding(building);
-                user.resourceAmount -= canAffordBuilding(); // 자원 차감
+                userInfo.user.insertBuilding(building);
+                userInfo.user.resourceAmount -= canAffordBuilding(); // 자원 차감
                 savedata();
             }
             createHexMap(gameSettings.rows, gameSettings.cols);
@@ -189,31 +190,31 @@ export function makeUnitButton(tile, number = 1, whatBuilding) {
         let isUnitLimitExceeded = true;
         const {
             buildUnitCount, meleeUnitCount, rangedUnitCount, eliteUnitCount
-        } = user.howManyUnit();
+        } = userInfo.user.howManyUnit();
 
         const {
             limitOfBuildUnit, limitOfMeleeUnit, limitOfRangedUnit, limitOfEliteUnit
-        } = user.limitOfUnit();
+        } = userInfo.user.limitOfUnit();
 
-        console.log(user.pendingBuildUnits);
+        console.log(userInfo.user.pendingBuildUnits);
         console.log(limitOfBuildUnit)
 
         switch (whatBuilding) {
             case "mainBuilding":
                 isUnitLimitExceeded = 
-                buildUnitCount + user.pendingBuildUnits >= limitOfBuildUnit;   
+                buildUnitCount + userInfo.user.pendingBuildUnits >= limitOfBuildUnit;   
                 break;
             case "meleeUnitBuilding":
                 isUnitLimitExceeded = 
-                meleeUnitCount + user.pendingMeleeUnits >= limitOfMeleeUnit;
+                meleeUnitCount + userInfo.user.pendingMeleeUnits >= limitOfMeleeUnit;
                 break;
             case "rangedUnitBuilding":
                 isUnitLimitExceeded = 
-                rangedUnitCount + user.pendingRangedUnits >= limitOfRangedUnit;
+                rangedUnitCount + userInfo.user.pendingRangedUnits >= limitOfRangedUnit;
                 break;
             case "eliteUnitBuilding":
                 isUnitLimitExceeded = 
-                eliteUnitCount + user.pendingEliteUnits >= limitOfEliteUnit;
+                eliteUnitCount + userInfo.user.pendingEliteUnits >= limitOfEliteUnit;
                 break;
             default:
                 console.log(`알 수 없는 건물 유형: ${whatBuilding}`);
@@ -245,28 +246,28 @@ export function makeUnitButton(tile, number = 1, whatBuilding) {
                 console.log(`알 수 없는 건물 유형: ${whatBuilding}`);
                 return false;
         }
-        return user.resourceAmount >= unitCost ? unitCost : 0;
+        return userInfo.user.resourceAmount >= unitCost ? unitCost : 0;
     }
 
     function initiateUnitProduction() {
         switch (whatBuilding) {
             case "mainBuilding":
-                user.pendingBuildUnits++;
+                userInfo.user.pendingBuildUnits++;
                 break;
             case "meleeUnitBuilding":
-                user.pendingMeleeUnits++;
+                userInfo.user.pendingMeleeUnits++;
                 break;
             case "rangedUnitBuilding":
-                user.pendingRangedUnits++;
+                userInfo.user.pendingRangedUnits++;
                 break;
             case "eliteUnitBuilding":
-                user.pendingEliteUnits++;
+                userInfo.user.pendingEliteUnits++;
                 break;
             default:
                 console.log(`몰루?`);
         }
 
-        const unitProductionDelay = 3; // 유닛 생산에 필요한 턴 수
+        const unitProductionDelay = 0; // 유닛 생산에 필요한 턴 수
         const currentTurn = gameSettings.turn; // 현재 턴을 가져오는 로직
 
 
@@ -285,13 +286,14 @@ export function makeUnitButton(tile, number = 1, whatBuilding) {
         };
 
         buildingMap[tile.row][tile.col].pendingUnits.push(unitData); // 대기 중인 유닛을 사용자 목록에 추가
-        user.resourceAmount -= canAffordUnit(); // 자원 차감
+        userInfo.user.resourceAmount -= canAffordUnit(); // 자원 차감
 
         const selectedBuilding = buildingMap[tile.row][tile.col];
         let penddingTurns = selectedBuilding.pendingUnits[0].startTurn + selectedBuilding.pendingUnits[0].delay - gameSettings.turn;
         let pendingUnits = selectedBuilding.pendingUnits.length;
-        document.getElementById("move-value").innerHTML =
-            `${penddingTurns}턴 뒤 유닛 생산<br>${pendingUnits}개 대기중`;
+        //document.getElementById("move-value").innerHTML =
+        //    `${penddingTurns}턴 뒤 유닛 생산<br>${pendingUnits}개 대기중`;
+        userInfo.user.processPending();
         savedata();
     }
 }
@@ -370,7 +372,7 @@ export function makeDevelopmentButton(tile, number = 1, whatDevelopment) {
                 console.log(`알 수 없는 건물 유형: ${whatDevelopment}`);
                 return false;
         }
-        return user.resourceAmount >= DevelopmentCost ? DevelopmentCost : 0;
+        return userInfo.user.resourceAmount >= DevelopmentCost ? DevelopmentCost : 0;
     }
 
     function initiateDevelopment() {
@@ -410,13 +412,13 @@ export function makeDevelopmentButton(tile, number = 1, whatDevelopment) {
         };
 
         buildingMap[tile.row][tile.col].pendingDevelopment.push(DevelopmentData); // 대기 중인 발전을 목록에 추가
-        user.resourceAmount -= canAffordDevelopment(); // 자원 차감
+        userInfo.user.resourceAmount -= canAffordDevelopment(); // 자원 차감
 
         const selectedBuilding = buildingMap[tile.row][tile.col];
         let penddingTurns = selectedBuilding.pendingDevelopment[0].startTurn + selectedBuilding.pendingDevelopment[0].delay - gameSettings.turn;
         let pendingDevelopment = selectedBuilding.pendingDevelopment.length;
-        document.getElementById("move-value").innerHTML =
-            `${penddingTurns}턴 뒤 발전<br>${pendingDevelopment}개 대기중`;
+        //document.getElementById("move-value").innerHTML =
+        //    `${penddingTurns}턴 뒤 발전<br>${pendingDevelopment}개 대기중`;
     }
 }
 

@@ -2,7 +2,7 @@ import {
     canvas, ctx, 
     gameSettings, prices, limits, 
     unitMovement, userInfo, state, 
-    hexMap, unitMap, buildingMap, user} from "./map.js";import { buildUnit, meleeUnit, rangedUnit, eliteUnit } from "./UnitClass.js";
+    hexMap, unitMap, buildingMap} from "./map.js";import { buildUnit, meleeUnit, rangedUnit, eliteUnit } from "./UnitClass.js";
 
 // 육각형 타일 클래스 정의
 export class HexTile {

@@ -2,7 +2,7 @@ import {
     canvas, ctx, 
     gameSettings, prices, limits, 
     unitMovement, userInfo, state, 
-    hexMap, unitMap, buildingMap, user, savedata} from "./map.js";
+    hexMap, unitMap, buildingMap, savedata} from "./map.js";
 import { createHexMap } from "./CenterRelatedFunc.js";
 import { 
     buildUnit, meleeUnit, 
@@ -99,26 +99,27 @@ class Building {
                 switch (buildingType) {
                     case "mainBuilding":
                         unit = new buildUnit(gameSettings.hexRadius / 2);
-                        user.pendingBuildUnits--;
+                        userInfo.user.pendingBuildUnits--;
                         break;
                     case "meleeUnitBuilding":
                         unit = new meleeUnit(gameSettings.hexRadius / 2);
-                        user.pendingMeleeUnits--;
+                        userInfo.user.pendingMeleeUnits--;
                         break;
                     case "rangedUnitBuilding":
                         unit = new rangedUnit(gameSettings.hexRadius / 2);
-                        user.pendingRangedUnits--;
+                        userInfo.user.pendingRangedUnits--;
                         break;
                     case "eliteUnitBuilding":
                         unit = new eliteUnit(gameSettings.hexRadius / 2);
-                        user.pendingEliteUnits--;
+                        userInfo.user.pendingEliteUnits--;
                         break;
                     default:
                         console.log(`알 수 없는 건물 유형: ${buildingType}`);
                 }
                 if (unit) {
+                    unit.user = userInfo.user.name;
                     unitMap[tile.row][tile.col] = unit;
-                    user.insertUnit(unit);
+                    userInfo.user.insertUnit(unit);
                     createHexMap(gameSettings.rows, gameSettings.cols);
                     savedata();
                 }

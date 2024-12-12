@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Game Lobby</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to right, #243447, #36D1DC);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+        .connected-users {
+            width: 250px;
+            background-color: #2d3748;
+            color: white;
+            padding: 16px;
+            overflow-y: auto;
+            border-radius: 10px;
+        }
+        .main-content {
+            flex: 1;
+            display: flex;
+            padding: 16px;
+        }
+        .room-list-container {
+            flex: 1;
+            background-color: #1a202c;
+            color: white;
+            margin: 0 16px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            border-radius: 10px;
+        }
+        .room-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 0;
+            list-style-type: none;
+        }
+        .room-list li {
+            padding: 16px;
+            cursor: pointer;
+            border-bottom: 1px solid #4a5568;
+        }
+        .room-list li:hover {
+            background-color: #4a5568;
+        }
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            padding: 16px;
+            background-color: #2d3748;
+        }
+        .pagination button {
+            padding: 8px 16px;
+            background-color: #3182ce;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .pagination button:disabled {
+            background-color: #718096;
+            cursor: not-allowed;
+        }
+        .create-room-container {
+            width: 250px;
+            background-color: #2d3748;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            border-radius: 10px;
+        }
+        .create-room-button {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: #3182ce;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        h2 {
+            margin-top: 16px;
+            margin-bottom: 16px;
+            text-align: center;  /* 중앙 정렬 */
+        }
+
+        .header-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 15px;
+            position: relative;
+        }
+
+        .header-border {
+            background-color: #1a202c;
+            color: white;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            color: white;
+        }
+
+        header {
+            display: block; 
+            width: 100%;
+            margin-bottom: 20px; /* header와 main 사이의 간격 */
+            text-align: center;  /* 중앙 정렬 */
+        }
+        header nav {
+            width: 100%;
+            padding: 1em 0;
+        }
+
+        header nav a {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+    <header class="header-border">
+        <div class="hearder-container ">
+          <nav>
+            <a href="/" class="logo">TBSWB</a>
+          </nav>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="main-content">
+            <div class="connected-users">
+                <h2>Connected Users</h2>
+                <ul id="userList"></ul>
+            </div>
+
+            <div class="room-list-container">
+                <h2>Game Rooms</h2>
+                <ul id="roomList" class="room-list"></ul>
+                <div class="pagination">
+                    <button id="prevButton" disabled>&lt; 이전</button>
+                    <span id="pageInfo"></span>
+                    <button id="nextButton">다음 &gt;</button>
+                </div>
+            </div>
+            
+            <div class="create-room-container">
+                <a href="/room/create-room" class="create-room-button">방 만들기</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const roomsPerPage = 5;
+        let currentPage = 1;
+
+        // 서버에서 방 목록을 가져오는 함수
+        async function fetchRoomsAndUsers() {
+            try {
+                const response = await fetch('/room/list-room-data'); // 서버에서 데이터 받아오기
+                const data = await response.json();
+                return data; // 방과 유저 데이터를 반환
+            } catch (error) {
+                console.error('Error fetching rooms and users:', error);
+                return { rooms: [], users: [] };
+            }
+        }
+
+        // 유저 목록을 렌더링하는 함수
+        function renderUsers(users) {
+            const userList = document.getElementById('userList');
+            userList.innerHTML = ''; // 기존 목록 초기화
+
+            users.forEach(user => {
+                const li = document.createElement('li');
+                li.textContent = user.username; // 유저 이름 표시
+                userList.appendChild(li);
+            });
+        }
+
+        // 방 목록을 렌더링하는 함수
+        async function renderRoomsAndUsers() {
+            const { rooms, users } = await fetchRoomsAndUsers();
+
+            // 방 목록 렌더링
+            const roomList = document.getElementById('roomList');
+            roomList.innerHTML = '';
+
+            const startIndex = (currentPage - 1) * roomsPerPage;
+            const endIndex = startIndex + roomsPerPage;
+            const currentRooms = rooms.slice(startIndex, endIndex);
+
+            currentRooms.forEach(room => {
+                const li = document.createElement('li');
+                li.innerHTML = `${room.hostname}의 ${room.roomname}방 <span style="float: right;">${room.usernames.length}/2 Users</span>`;
+                li.addEventListener('click', () => {
+                    window.location.href = `/room/in-room?id=${room._id}`; // 클릭 시 해당 방으로 이동
+                });
+                roomList.appendChild(li);
+            });
+
+            // 유저 목록 렌더링
+            renderUsers(users);
+
+            // 페이지네이션 업데이트
+            updatePagination(rooms.length);
+        }
+
+        // 페이지네이션 업데이트 함수
+        function updatePagination(totalRooms) {
+            const totalPages = Math.ceil(totalRooms / roomsPerPage);
+            document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('prevButton').disabled = currentPage === 1;
+            document.getElementById('nextButton').disabled = currentPage === totalPages;
+        }
+
+        // 이전 버튼 클릭 시 페이지 변경
+        document.getElementById('prevButton').addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderRooms();
+            }
+        });
+
+        // 다음 버튼 클릭 시 페이지 변경
+        document.getElementById('nextButton').addEventListener('click', () => {
+            fetchRooms().then(rooms => {
+                const totalPages = Math.ceil(rooms.length / roomsPerPage);
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    renderRooms();
+                }
+            });
+        });
+
+        // 페이지 로드 시 방 목록을 렌더링
+        renderRoomsAndUsers();
+    </script>
+</body>
+</html>

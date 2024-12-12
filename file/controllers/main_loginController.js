@@ -100,6 +100,15 @@ const loginUser = asyncHandler(async(req,res)=>{
         //return res.status(401).json({message:"비밀번호가 일치하지 않습니다."});
     }
 
+    // 로그인 성공 시 isonline을 true로 설정
+    user.isonline = true;
+    user.isroom = false;
+    user.isgame = false;
+    user.gameroom = null;
+
+    // 변경된 user 데이터를 저장
+    await user.save();
+
     const token = jwt.sign({id:user._id},jwtSecret);
     res.cookie("token", token, {httpOnly: true});
 
@@ -108,7 +117,31 @@ const loginUser = asyncHandler(async(req,res)=>{
 
 // @desc Logout
 // @route GET /logout
-const logout = (req,res)=>{
+const logout = async (req,res)=>{
+    // 인증된 사용자의 ID를 얻기 위해 토큰을 검증
+    const token = req.cookies.token;
+    if (!token) {
+        return res.redirect("/login");
+    }
+
+    try {
+        // 토큰을 디코드하여 사용자 ID 가져오기
+        const decoded = jwt.verify(token, jwtSecret);
+        const userId = decoded.id;
+
+        // 해당 사용자를 찾아서 isonline을 false로 설정
+        const user = await User.findById(userId);
+        if (user) {
+            user.isonline = false;
+            user.isroom = false;
+            user.isgame = false;
+            user.gameroom = null;
+            await user.save();
+        }
+    } catch (error) {
+        console.error("로그아웃 처리 중 오류 발생:", error);
+    }
+
     res.clearCookie("token");
     res.redirect("/");
 }
@@ -116,12 +149,49 @@ const logout = (req,res)=>{
 // @desc mypage
 // @route GET /mypage
 const mypage = asyncHandler(async(req,res)=>{
-    const token = req.cookies.token;    
-    const decoded = jwt.verify(token,jwtSecret);
-    const id = decoded.id;
-    const user = await User.findById(id);
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const recordsPerPage = 3;
 
-    res.render("mypage",{Message:`${user.username}님의 페이지`});
+        const token = req.cookies.token;    
+
+        // 토큰이 없다면 오류 처리
+        if (!token) {
+            return res.status(401).json({ message: '인증되지 않은 요청입니다.' });
+        }
+
+        const decoded = jwt.verify(token, jwtSecret);
+        const user = await User.findById(decoded.id);
+        
+        if (!user) {
+            return res.status(404).json({ message: '사용자를 찾을 수 없습니다.' });
+        }
+
+        const totalRecords = user.record.length;
+        const totalPages = Math.ceil(totalRecords / recordsPerPage);
+
+        const startIndex = (page - 1) * recordsPerPage;
+        const endIndex = startIndex + recordsPerPage;
+        const records = user.record.reverse().slice(startIndex, endIndex);
+
+        res.render('mypage', { 
+            Message: `${user.username}님의 페이지`, 
+            records: records,
+            currentPage: page,
+            totalPages: totalPages
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: '오류가 발생했습니다.' });
+    }
+
+    //const token = req.cookies.token;    
+    //const decoded = jwt.verify(token,jwtSecret);
+    //const id = decoded.id;
+    //const user = await User.findById(id);
+
+    //res.render("mypage",{Message:`${user.username}님의 페이지`});
 });
 
 // @desc mypage

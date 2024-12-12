@@ -2,7 +2,7 @@ import {
     canvas, ctx, 
     gameSettings, prices, limits, 
     unitMovement, userInfo, state, 
-    hexMap, unitMap, buildingMap, user} from "./map.js";
+    hexMap, unitMap, buildingMap} from "./map.js";
 import { createHexMap } from "./CenterRelatedFunc.js";
 
 export function attackedMotion(dx, dy, object) {

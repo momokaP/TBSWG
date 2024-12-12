@@ -14,6 +14,26 @@ const UserSchema = new Schema({
         type:String,
         required:true,
     },
+    isonline: {
+        type: Boolean,
+        default: false, // 기본값은 false로 설정
+    },
+    isroom: {
+        type: Boolean,
+        default: false, // 기본값은 false로 설정
+    },
+    isgame: {
+        type: Boolean,
+        default: false, // 기본값은 false로 설정
+    },
+    gameroom:{
+        type:String,
+    },
+    record: [{
+        gamaroomname: String,
+        iswin: Boolean,   
+    }],
+
 });
 
 // User 모델을 만들고 내보내기

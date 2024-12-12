@@ -1,38 +1,116 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>마이페이지</title>
-  <link rel="stylesheet" href="css/login_resiger.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>마이페이지</title>
+    <link rel="stylesheet" href="css/login_resiger.css">
+    <style>
+        .game-records {
+            margin-top: 20px;
+            border-top: 1px solid #ddd;
+            padding-top: 20px;
+            color: white;
+            margin: 10px;
+        }
+        .record-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .record-item {
+            margin: 10px;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding: 10px;
+            background-color: #262f40;
+            border-radius: 5px;
+        }
+        .record-result-win {
+            color: green;
+            font-weight: bold;
+        }
+        .record-result-lose {
+            color: red;
+            font-weight: bold;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .pagination button {
+            margin: 0 10px;
+            padding: 5px 10px;
+            background-color: #2563eb;
+            border: 1px solid #2563eb;
+            color:white;
+            cursor: pointer;
+            border-radius: 10px;
+        }
+    </style>
 </head>
 <body>
-  <header class="border">
-    <div class="container ">
-      <nav>
-        <a href="/" class="logo">TBSWB</a>
-      </nav>
-    </div>
-  </header>
-
-  <main id="site-main">
-    <div class="card">
-
-      <div class="card-header">
-        <h1 class="card-title">마이페이지</h1>
-        <p class="card-description"><%- Message %></p>
-      </div>
-
-      <div class="card-footer">
-        <div class="text-button-wrap">
-          <a href="/" class="text-button-mypage">메인으로</a>
-          <form id="deleteForm" action="/mypage/?_method=DELETE" method="POST" class="delete">
-            <button class="button" type="submit">계정 삭제</button>
-          </form>
+    <header class="border">
+        <div class="container">
+            <nav>
+                <a href="/" class="logo">TBSWB</a>
+            </nav>
         </div>
-      </div>
+    </header>
 
-    </div>
-  </main>
+    <main id="site-main">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="card-title">마이페이지</h1>
+                <p class="card-description"><%- Message %></p>
+            </div>
+
+            <div class="game-records">
+                <h2>게임 기록</h2>
+                <% if (records.length > 0) { %>
+                    <ul class="record-list">
+                        <% records.forEach(function(record) { %>
+                            <li class="record-item">
+                                <span>게임방: <%= record.gamaroomname %></span>
+                                <span class="<%= record.iswin ? 'record-result-win' : 'record-result-lose' %>">
+                                    <%= record.iswin ? '승리' : '패배' %>
+                                </span>
+                            </li>
+                        <% }); %>
+                    </ul>
+                    
+                    <div class="pagination">
+                        <% if (currentPage > 1) { %>
+                            <button onclick="changePage(<%= currentPage - 1 %>)">이전</button>
+                        <% } %>
+                        
+                        <span>페이지 <%= currentPage %> / <%= totalPages %></span>
+                        
+                        <% if (currentPage < totalPages) { %>
+                            <button onclick="changePage(<%= currentPage + 1 %>)">다음</button>
+                        <% } %>
+                    </div>
+                <% } else { %>
+                    <p>게임 기록이 없습니다.</p>
+                <% } %>
+            </div>
+
+            <div class="card-footer">
+                <div class="text-button-wrap">
+                    <a href="/" class="text-button-mypage">메인으로</a>
+                    <form id="deleteForm" action="/mypage/?_method=DELETE" method="POST" class="delete">
+                        <button class="button" type="submit">계정 삭제</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function changePage(page) {
+            window.location.href = `/mypage?page=${page}`;
+        }
+    </script>
 </body>
 </html>

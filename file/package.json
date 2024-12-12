@@ -9,6 +9,7 @@
     "jsonwebtoken": "^9.0.2",
     "method-override": "^3.0.0",
     "mongoose": "^8.8.2",
-    "nodemon": "^3.1.7"
+    "nodemon": "^3.1.7",
+    "socket.io": "^4.8.1"
   }
 }

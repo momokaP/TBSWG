@@ -2,6 +2,7 @@ const express = require("express");
 const cookieParser = require("cookie-parser");
 const {checkLogin_game, checkLogin_main} = require("../middlewares/checkLogin");
 const { 
+    getgameroom, updategameroom,
     saveHexMap, getHexMap,
     saveUnitMap, getUnitMap,
     saveBuildingtMap, getBulidingMap,
@@ -12,6 +13,9 @@ const {
 const router = express.Router();
 
 router.use(cookieParser());
+
+router.route("/gameroom").get(checkLogin_game, getgameroom);
+router.route("/gameroom").put(checkLogin_game, updategameroom);
 
 router.route("/save-hex-map").post(checkLogin_game, saveHexMap);
 router.route("/get-hex-map").get(checkLogin_game, getHexMap);

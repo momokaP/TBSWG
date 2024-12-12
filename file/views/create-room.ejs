@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Game Room</title>
+    <style>
+        body {
+            background: linear-gradient(to right, #243447, #36D1DC);
+            margin: 0;
+            font-family: Arial, sans-serif;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            background-color: #1a202c;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 384px;
+            color: #fff;
+        }
+
+        .heading {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #4b5563;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+        }
+
+        .submit-button {
+            margin-top: 20px;
+            width: 100%;
+            padding: 0.75rem;
+            background-color: #2563eb;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .submit-button:hover {
+            background-color: #1d4ed8;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 1rem;
+            text-align: center;
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            color: #1d4ed8;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 15px;
+            position: relative;
+        }
+
+        .border {
+            background-color: #1a202c;
+            color: white;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            color: white;
+        }
+
+        header {
+            display: block; 
+            width: 100%;
+            margin-bottom: 20px; /* header와 main 사이의 간격 */
+            text-align: center;  /* 중앙 정렬 */
+        }
+        header nav {
+            width: 100%;
+            padding: 1em 0;
+        }
+
+        header nav a {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+    </style>
+</head>
+<body class="form-container">
+
+    <header class="border">
+        <div class="container ">
+          <nav>
+            <a href="/" class="logo">TBSWB</a>
+          </nav>
+        </div>
+    </header>
+
+    <main> 
+        <div class="card">
+            <h1 class="heading">방 만들기</h1>
+            <form id="createRoomForm">
+                <div class="mb-4">
+                    <label for="roomName" class="block text-sm font-medium text-gray-700">방 이름</label>
+                    <input type="text" id="roomName" name="roomName" required class="input-field">
+                </div>
+                <button type="submit" class="submit-button">
+                    방 만들기!
+                </button>
+            </form>
+            <a href="/room/list-room" class="back-link">방 목록으로 돌아가기</a>
+        </div>
+    </main>
+
+    <script>
+        document.getElementById('createRoomForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+
+        const roomName = document.getElementById('roomName').value;
+
+        if (roomName) {
+            try {
+                const response = await fetch('/room/create-room', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ roomname: roomName })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(result.message);
+                    // 생성된 방의 _id를 이용해 해당 방으로 이동
+                    window.location.href = `/room/in-room?id=${result.roomId}`;
+                } else {
+                    alert(result.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('방 생성 중 오류가 발생했습니다. 다시 시도해주세요.');
+            }
+        } else {
+            alert('Please enter a room name.');
+        }
+    });
+    </script>
+</body>
+</html>

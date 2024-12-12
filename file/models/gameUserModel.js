@@ -5,8 +5,10 @@ const gameUserSchema = new mongoose.Schema({
     name: String,
     resourceAmount: Number, 
     turn: Number,
+    myturn: Boolean,
 
     username: String,
+    gameroom: String,
     createdAt: {
         type: Date,
         default: Date.now, // 문서가 생성될 때의 시간
