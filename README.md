@@ -2,4 +2,4 @@
 Turn Based Strategy Web Game
 
 root#
-npm i express method-override cookie-parser jsonwebtoken dotenv express-async-handler bcrypt mongoose
+npm i express method-override cookie-parser jsonwebtoken dotenv express-async-handler bcrypt mongoose socket.io
