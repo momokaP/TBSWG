@@ -31,7 +31,10 @@ const registerUser = asyncHandler(async (req,res)=>{
     const{username, password, confirmPassword} = req.body;
 
     // 비밀번호 강도 검사: 8자 이상, 대문자/소문자/숫자/특수문자 포함 여부 확인
-    const passwordRegex = /^(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+    //const passwordRegex = /^(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,}$/;
+    
+    // 비밀번호 강도 검사: 4자 이상
+    const passwordRegex = /^.{4,}$/;
 
     if (!passwordRegex.test(password)) {
         return res.status(400).render("error", {
