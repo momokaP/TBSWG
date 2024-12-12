@@ -93,6 +93,15 @@ const loginUser = asyncHandler(async(req,res)=>{
         //return res.status(401).json({message:"일치하는 사용자가 없습니다."});
     }
 
+    // 이미 로그인된 상태인지 확인
+    if (user.isonline) {
+        return res.status(400).render("error", {
+            errorMessage: "이미 다른 기기에서 로그인된 사용자입니다.".replace(/\n/g, "<br>"),
+            redirectLink: "/login",
+            redirectText: "다시 로그인하기",
+        });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
 
     if(!isMatch){
