@@ -2,7 +2,7 @@
 html, body {
     margin: 0; /* 기본 margin 제거 */
     padding: 0; /* 기본 padding 제거 */
-    overflow: hidden;
+    overflow: auto;
 }
 
 /* body를 flexbox로 설정하여 중앙 정렬 */
