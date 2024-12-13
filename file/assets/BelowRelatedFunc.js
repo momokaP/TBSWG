@@ -156,7 +156,7 @@ export function makeUnitButton(tile, number = 1, whatBuilding) {
         }
         Button_1.onclick = () => {
             if (canAffordUnit() > 0) {
-                if (!checkUnitCapacity()) {
+                if (!checkUnitCapacity() && !unitMap[tile.row][tile.col]) {
                     initiateUnitProduction();
                     createHexMap(gameSettings.rows, gameSettings.cols);
                     //switchcase_unitButton();
@@ -173,7 +173,7 @@ export function makeUnitButton(tile, number = 1, whatBuilding) {
         if (Button_1) {
             Button_1.onclick = () => {
                 if (canAffordUnit() > 0) {
-                    if (!checkUnitCapacity()) {
+                    if (!checkUnitCapacity() && !unitMap[tile.row][tile.col]) {
                         initiateUnitProduction();
                         createHexMap(gameSettings.rows, gameSettings.cols);
                         //switchcase_unitButton();
