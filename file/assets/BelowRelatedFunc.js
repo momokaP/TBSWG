@@ -150,7 +150,7 @@ export function makeUnitButton(tile, number = 1, whatBuilding) {
         const Button_1 = document.createElement(`button-${number}`);
         Button_1.id = `Button_${number}`;
         Button_1.textContent = "생산하기";
-        if (canAffordUnit() <= 0 || checkUnitCapacity()) {
+        if (canAffordUnit() <= 0 || checkUnitCapacity() || unitMap[tile.row][tile.col]) {
             Button_1.style.backgroundColor = "#ccc"; // 비활성화 색상
             Button_1.style.cursor = "not-allowed";
         }
