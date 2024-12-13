@@ -95,11 +95,12 @@ const loginUser = asyncHandler(async(req,res)=>{
 
     // 이미 로그인된 상태인지 확인
     if (user.isonline) {
-        return res.status(400).render("error", {
-            errorMessage: "이미 다른 기기에서 로그인된 사용자입니다.".replace(/\n/g, "<br>"),
-            redirectLink: "/login",
-            redirectText: "다시 로그인하기",
-        });
+        // 이미 로그인하면 초기화 진행하고 로그인
+        user.isonline = false;
+        user.isroom = false;
+        user.isgame = false;
+        user.gameroom = null;
+        await user.save();
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
